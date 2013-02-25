@@ -1,0 +1,10 @@
+#!/bin/bash
+
+rm -f $1
+rm -f $1.o
+clang -std=c11 $1.c -o $1
+if [ $? -eq 0 ]; then
+    ./$1 ${*:2}
+else
+    echo "COMPILATION ERROR"
+fi
