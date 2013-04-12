@@ -8,7 +8,6 @@
 void file_info_new(file_info* fi, const char* fileName)
 {
     assert(fi);
-
     fi->fileName = NULL;
     
     if (fileName)
@@ -69,8 +68,17 @@ int file_info_read(FILE* source, file_info* result)
     int iter;
     char nameBuffer[1000];
 
-    if (fscanf(source, "%c %d %s\n", &st, &iter, nameBuffer) == EOF)
+    if (fscanf(source, "%c %d ", &st, &iter) == EOF)
         return EOF;
+
+    fgets(nameBuffer, 1000, source);
+
+    if (feof(source))
+        return EOF;
+
+    int size = strlen(nameBuffer);
+    if (nameBuffer[size-1] == '\n')
+        nameBuffer[size-1] = '\0';
 
     result->state = st;
     result->iter = iter;

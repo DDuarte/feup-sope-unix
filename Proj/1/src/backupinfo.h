@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "vector.h"
+#include "fileinfo.h"
 
 typedef struct
 {
@@ -34,5 +35,12 @@ int backup_info_read(FILE* source, backup_info* result); // read from file
  * @return        0 upon success, different otherwise
  */
 int backup_info_write(FILE* dest, const backup_info* backup); // write to file
+
+/**
+ * backup_info_add_file adds a new file_info to the backup_info struct. The specified file_info struct is copied.
+ * @param  bi backup_info struct to receive the new value. Must not be NULL.
+ * @param  fi file_info struct to add. Must not be NULL.
+ */
+void backup_info_add_file(backup_info* bi, file_info* fi);
 
 #endif

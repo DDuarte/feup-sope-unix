@@ -6,6 +6,8 @@
 #include "vector.h"
 #include "fileinfo.h"
 
+#define DEBUG_STR printf("%s, %d", __FUNCTION__, __LINE__);
+
 void backup_info_new(backup_info* bi)
 {
     assert(bi);
@@ -58,4 +60,14 @@ int backup_info_write(FILE* dest, const backup_info* backup)
     }
 
     return 0;
+}
+
+void backup_info_add_file(backup_info* bi, file_info* fi)
+{
+    assert(bi);
+    assert(fi);
+
+    file_info* fiToBeAdded = NULL;
+    file_info_copy(fi, &fiToBeAdded);
+    vector_push_back(&bi->file_list, fiToBeAdded);
 }
