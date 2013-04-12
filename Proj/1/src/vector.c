@@ -23,14 +23,14 @@ void vector_free(vector* v)
     free(v->buffer);
 }
 
-int vector_size(vector* v)
+int vector_size(const vector* v)
 {
     assert(v);
 
     return v->count;
 }
 
-int vector_capacity(vector* v)
+int vector_capacity(const vector* v)
 {
     assert(v);
 
@@ -81,7 +81,7 @@ void vector_insert(vector* v, void* data, int index)
     v->count++;
 }
 
-void* vector_get(vector* v, int index)
+void* vector_get(const vector* v, int index)
 {
     assert(v);
     assert(index >= 0);

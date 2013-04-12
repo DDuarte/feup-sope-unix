@@ -135,7 +135,7 @@ int main(int argc, const char* argv[])
                 backup_info_new(&current);
 
                 backup(srcdir, destdir, NULL, &current);
-                backup_info_write(destdir, &current);
+                //backup_info_write(destdir, &current);
             }
             else // N run - incremental backup
             {
@@ -148,9 +148,9 @@ int main(int argc, const char* argv[])
 
                 backup_info previous;
                 backup_info current;
-                backup_info_read(destdir, iteration - 1, &previous);
+                //backup_info_read(destdir, iteration - 1, &previous);
                 backup(srcdir, destdir, &previous, &current);
-                backup_info_write(destdir, &current);
+                //backup_info_write(destdir, &current);
             }
 
             return EXIT_SUCCESS;
