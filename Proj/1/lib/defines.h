@@ -2,7 +2,7 @@
 #define DEFINES_H_
 
 #ifndef DEBUG
-#  define DEBUG 0
+#  define DEBUG 1
 #endif
 
 #if DEBUG
