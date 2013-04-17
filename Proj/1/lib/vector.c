@@ -73,8 +73,7 @@ void vector_insert(vector* v, void* data, int index)
         assert(v->buffer);
     }
 
-    int i;
-    for (i = v->count; i >= index; --i)
+    for (int i = v->count; i >= index; --i)
         v->buffer[i + 1] = v->buffer[i];
 
     v->buffer[index] = data;
@@ -97,11 +96,8 @@ void vector_erase(vector* v, int index)
     assert(index < v->count);
 
     if (index != v->count -1)
-    {
-        int i;
-        for (i = index; i < v->count - 1; ++i)
+        for (int i = index; i < v->count - 1; ++i)
             v->buffer[i] = v->buffer[i+1];
-    }
 
     v->buffer[v->count - 1] = NULL;
     v->count --;

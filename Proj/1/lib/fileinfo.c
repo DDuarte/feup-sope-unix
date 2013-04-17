@@ -9,7 +9,7 @@ void file_info_new(file_info* fi, const char* fileName)
 {
     assert(fi);
     fi->fileName = NULL;
-    
+
     if (fileName)
     {
         file_info_set_name(fi, fileName);
@@ -34,19 +34,15 @@ void file_info_set_name(file_info* fi, const char* fileName)
 
     int newSize = strlen(fileName);
 
-    if (fi->fileName) 
+    if (fi->fileName)
     {
         int prevSize = strlen(fi->fileName);
 
         if (newSize > prevSize)
-        {
             fi->fileName = (char*) realloc(fi->fileName, newSize);
-        }
     }
     else
-    {
         fi->fileName = (char*) malloc(newSize);
-    }
 
     strcpy(fi->fileName, fileName);
 }
@@ -89,13 +85,10 @@ int file_info_read(FILE* source, file_info* result)
 
 void file_info_copy(const file_info* source, file_info** dest)
 {
-    if (!(*dest))
-    {
+    if (!*dest)
         *dest = (file_info*) malloc(sizeof(file_info));
-    }
 
     file_info_new(*dest, source ? source->fileName : NULL);
-
 
     if (source)
     {

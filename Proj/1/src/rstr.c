@@ -8,8 +8,10 @@
 #include <dirent.h>
 #include <unistd.h>
 
+#include "../lib/backupinfo.h"
 #include "../lib/vector.h"
-
+#include "../lib/utilities.h"
+#include "../lib/fileinfo.h"
 
 /**
  * Prints information on how to use this program
@@ -73,6 +75,10 @@ int main(int argc, char const *argv[])
     if (vector_size(&subdirsstr) == 0)
     {
         printf("Nothing to restore.\n");
+
+        vector_free(&subdirsstr);
+        closedir(srcdir);
+        closedir(destdir);
         return EXIT_SUCCESS;
     }
 
@@ -88,7 +94,8 @@ int main(int argc, char const *argv[])
         // User can pick restore point either by time string or iteration;
         // time string corresponds to the folder name in the backup dir, iteration start at 0;
         // atoi returns 0 if it can't parse the string, in that case we assume that input is a
-        //  time string and we try to find it in subdirsstr - O(n)
+        //  time string and we try to find it in subdirsstr - O(n), otherwise we assume it's a
+        //  iteration - O(1)
         // if not found, we ask the user for a new restore point
 
         printf("Which restore point (time or iteration)? ");
@@ -119,9 +126,45 @@ int main(int argc, char const *argv[])
 
     } while (iter_to_restore == NULL);
 
+    char buffer[512];
+    snprintf(buffer, 512, "%s/%s", iter_to_restore, BACKUP_FILE_INFO_NAME);
 
+    FILE* backup_info_file = fopen(buffer, "r");
+    if (backup_info_file == NULL)
+    {
+        perror("fopen");
 
-    return 0;
+        vector_free(&subdirsstr);
+        closedir(srcdir);
+        closedir(destdir);
+        return EXIT_FAILURE;
+    }
+
+    backup_info backup_to_restore;
+    if (backup_info_read(backup_info_file, &backup_to_restore) != 0)
+    {
+        fprintf(stderr, "backup_info_read failed.");
+
+        vector_free(&subdirsstr);
+        closedir(srcdir);
+        closedir(destdir);
+        fclose(backup_info_file);
+        return EXIT_FAILURE;
+    }
+
+    for (int i = 0; i < vector_size(&backup_to_restore.file_list); ++i)
+    {
+        file_info* file = (file_info*)vector_get(&backup_to_restore.file_list, i);
+        printf("-- %s %c %i\n", file->fileName, file->state, file->iter);
+    }
+
+    vector_free(&subdirsstr);
+    closedir(srcdir);
+    closedir(destdir);
+    fclose(backup_info_file);
+    backup_info_free(&backup_to_restore);
+
+    return EXIT_SUCCESS;
 }
 
 void print_usage(bool err)
