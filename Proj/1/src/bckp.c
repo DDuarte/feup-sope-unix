@@ -329,7 +329,7 @@ int backup(const char* src, const char* dst, backup_info* prev, backup_info* cur
     if (!curr) { return -1; }
 
     struct dirent** files;
-    int numberOfFiles = scandir("/home/miguel", &files, regularFileSelector, alphasort);
+    int numberOfFiles = scandir(src, &files, regularFileSelector, alphasort);
 
     if (!prev) 
     {   
@@ -393,9 +393,10 @@ int backup(const char* src, const char* dst, backup_info* prev, backup_info* cur
 
                     if (fi.state == STATE_ADDED)
                         fi.iter = curr->iter;
-                    else {
+                    else if (fi.state == STATE_INALTERED && prevFi->state == STATE_MODIFIED)
+                        fi.iter = prev->iter;
+                    else 
                         fi.iter = prevFi->iter;
-                    }
 
                     backup_info_add_file(curr, &fi);
 
