@@ -26,12 +26,12 @@ static time_t initIterTime;
 // . unaltered n
 // format: "%c %d %s"
 
-time_t getFileLastModifiedTime(const char *dir, const char *file);
+time_t getFileLastModifiedTime(const char* dir, const char* file);
 
-int regularFileSelector(const struct dirent *file);
-int folderSelection(const struct dirent *file);
+int regularFileSelector(const struct dirent* file);
+int folderSelection(const struct dirent* file);
 
-void iter_to_folder(int iter, const char *dst, time_t startTime, int dt, char **name); // iter to folder name
+void iter_to_folder(int iter, const char* dst, time_t startTime, int dt, char** name); // iter to folder name
 
 /**
  * Prints information on how to use this program
@@ -59,7 +59,7 @@ void sigchil_handler(int signo);
  * @param  curr      return backup_info state
  * @return bool      true is successfull, false otherwise
  */
-bool backup(const char *src, const char *dst, backup_info *prev, backup_info *curr, time_t initTime, int dt);
+bool backup(const char* src, const char* dst, backup_info* prev, backup_info* curr, time_t initTime, int dt);
 
 /**
 * Entry point to this program
@@ -67,7 +67,7 @@ bool backup(const char *src, const char *dst, backup_info *prev, backup_info *cu
 * @param  argv Array of arguments
 * @return Program exit status code
 */
-int main(int argc, const char *argv[])
+int main(int argc, const char* argv[])
 {
     // Print usage if we receive -h or --help
     if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0))
@@ -81,9 +81,9 @@ int main(int argc, const char *argv[])
         return EXIT_FAILURE;
     }
 
-    const char *srcdirstr = argv[1];
-    const char *destdirstr = argv[2];
-    const char *dtstr = argv[3];
+    const char* srcdirstr = argv[1];
+    const char* destdirstr = argv[2];
+    const char* dtstr = argv[3];
 
     int dt = atoi(dtstr); // atoi returns 0 if conversion is not successful
     if (dt == 0)
@@ -92,7 +92,7 @@ int main(int argc, const char *argv[])
         return EXIT_FAILURE;
     }
 
-    DIR *srcdir = opendir(srcdirstr);
+    DIR* srcdir = opendir(srcdirstr);
     if (srcdir == NULL)
     {
         fprintf(stderr, "Could not open directory %s (%s).\n", srcdirstr, strerror(errno));
@@ -115,7 +115,7 @@ int main(int argc, const char *argv[])
         else if (pid == 0) // child
         {
             iteration += 1;
-            DIR *destdir = opendir(destdirstr);
+            DIR* destdir = opendir(destdirstr);
 
             if (iteration == 0) // first run -  full backup
             {
@@ -146,7 +146,7 @@ int main(int argc, const char *argv[])
 
                 backup(srcdirstr, destdirstr, NULL, &current, initIterTime, dt);
 
-                char *newFolderPathName = NULL;
+                char* newFolderPathName = NULL;
                 iter_to_folder(iteration, destdirstr, initIterTime, dt, &newFolderPathName);
 
                 if (mkdir(newFolderPathName, 0775) != 0)
@@ -159,7 +159,7 @@ int main(int argc, const char *argv[])
                 char newFilePathName[1024];
                 snprintf(newFilePathName, 1024, "%s/%s", newFolderPathName, BACKUP_FILE_INFO_NAME);
 
-                FILE *newFile = fopen(newFilePathName, "w");
+                FILE* newFile = fopen(newFilePathName, "w");
                 if (newFile == NULL)
                 {
                     perror("New backup file");
@@ -185,16 +185,16 @@ int main(int argc, const char *argv[])
                 backup_info previous;
                 backup_info current;
 
-                struct dirent **folders = NULL;
+                struct dirent** folders = NULL;
                 int size = scandir(destdirstr, &folders, folderSelection, alphasort);
 
-                char *prevFolderPathName = folders[size - 1]->d_name;
+                char* prevFolderPathName = folders[size - 1]->d_name;
                 char prevFilePathName[1024];
                 snprintf(prevFilePathName, 1024, "%s/%s/%s", destdirstr, prevFolderPathName, BACKUP_FILE_INFO_NAME);
 
                 printf("PrevFolderPathName: %s\n", prevFolderPathName);
 
-                FILE *prevFile = fopen(prevFilePathName, "r");
+                FILE* prevFile = fopen(prevFilePathName, "r");
                 if (prevFile == NULL)
                 {
                     perror("Previous backup file");
@@ -210,7 +210,7 @@ int main(int argc, const char *argv[])
 
                 if (backup(srcdirstr, destdirstr, &previous, &current, initIterTime, dt))
                 {
-                    char *newFolderPathName = NULL;
+                    char* newFolderPathName = NULL;
                     iter_to_folder(iteration, destdirstr, initIterTime, dt, &newFolderPathName);
 
                     printf("NewFolderName: %s\n", newFolderPathName);
@@ -224,7 +224,7 @@ int main(int argc, const char *argv[])
                     char newFilePathName[1024];
                     snprintf(newFilePathName, 1024, "%s/%s", newFolderPathName, BACKUP_FILE_INFO_NAME);
 
-                    FILE *newFile = fopen(newFilePathName, "w");
+                    FILE* newFile = fopen(newFilePathName, "w");
                     if (newFile == NULL)
                     {
                         perror("New backup file");
@@ -305,14 +305,14 @@ void sigchil_handler(int signo)
     }
 }
 
-bool backup(const char *src, const char *dst, backup_info *prev, backup_info *curr, time_t initTime, int dt)
+bool backup(const char* src, const char* dst, backup_info* prev, backup_info* curr, time_t initTime, int dt)
 {
     bool altered = false;
 
     if (!curr)
         return false;
 
-    struct dirent **files;
+    struct dirent** files;
     int numberOfFiles = scandir(src, &files, regularFileSelector, alphasort);
 
     if (!prev)
@@ -340,7 +340,7 @@ bool backup(const char *src, const char *dst, backup_info *prev, backup_info *cu
         file_info_new(&fi, "");
         while (i < prevNumberOfFiles || j < numberOfFiles)
         {
-            file_info *prevFi = vector_get(&prev->file_list, i);
+            file_info* prevFi = vector_get(&prev->file_list, i);
             switch (prevFi->state)
             {
             case STATE_ADDED:
@@ -400,7 +400,7 @@ bool backup(const char *src, const char *dst, backup_info *prev, backup_info *cu
 
             for (; i < prevNumberOfFiles; ++i)
             {
-                file_info *prevFi = vector_get(&prev->file_list, i);
+                file_info* prevFi = vector_get(&prev->file_list, i);
                 file_info_set_name(&fi, prevFi->fileName);
                 fi.iter = prevFi->iter;
 
@@ -425,17 +425,17 @@ bool backup(const char *src, const char *dst, backup_info *prev, backup_info *cu
     return altered;
 }
 
-int regularFileSelector(const struct dirent *file)
+int regularFileSelector(const struct dirent* file)
 {
     return file->d_type == DT_REG;
 }
 
-int folderSelection(const struct dirent *file)
+int folderSelection(const struct dirent* file)
 {
     return file->d_type == DT_DIR;
 }
 
-time_t getFileLastModifiedTime(const char *dir, const char *fileName)
+time_t getFileLastModifiedTime(const char* dir, const char* fileName)
 {
     char fPath[1024];
     snprintf(fPath, 1024, "%s/%s", dir, fileName);
@@ -449,7 +449,7 @@ time_t getFileLastModifiedTime(const char *dir, const char *fileName)
 void iter_to_folder(int iter, const char* dst, time_t startTime, int dt, char** name)
 {
     time_t ti = startTime + iter * dt;
-    struct tm *timestruct = gmtime(&ti);
+    struct tm* timestruct = gmtime(&ti);
     char buff[80];
     strftime(buff, 80, "%Y_%m_%d_%H_%M_%S", timestruct);
 
