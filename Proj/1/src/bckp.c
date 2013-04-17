@@ -12,7 +12,7 @@
 #include <time.h>
 
 #include "vector.h"
-#include "defines.h"
+#include "utilities.h"
 #include "backupinfo.h"
 #include "fileinfo.h"
 
@@ -167,7 +167,12 @@ int main(int argc, const char* argv[])
                 backup_info_write(newFile, &current);
                 fclose(newFile);
 
-                backup_info_write(newFile, &current);
+                for (int i = 0; i < vector_size(&current.file_list); ++i)
+                {
+                    file_info* fi = vector_get(&current.file_list, i);
+                    if (fi->state == STATE_ADDED || fi->state == STATE_MODIFIED)
+                        fork_copy_file(srcdirstr, newFolderPathName, fi->fileName);
+                }
 
                 free(newFolderPathName);
             }
@@ -232,6 +237,13 @@ int main(int argc, const char* argv[])
 
                     backup_info_write(newFile, &current);
                     fclose(newFile);
+
+                    for (int i = 0; i < vector_size(&current.file_list); ++i)
+                    {
+                        file_info* fi = vector_get(&current.file_list, i);
+                        if (fi->state == STATE_ADDED || fi->state == STATE_MODIFIED)
+                            fork_copy_file(srcdirstr, newFolderPathName, fi->fileName);
+                    }
 
                     free(newFolderPathName);
                 }
@@ -326,8 +338,6 @@ bool backup(const char* src, const char* dst, backup_info* prev, backup_info* cu
             backup_info_add_file(curr, &fi);
         }
 
-        // Copy Files
-
     }
     else
     {
@@ -417,8 +427,6 @@ bool backup(const char* src, const char* dst, backup_info* prev, backup_info* cu
                 backup_info_add_file(curr, &fi);
             }
         }
-
-        // Copy Added and Modified Files
     }
     return altered;
 }
