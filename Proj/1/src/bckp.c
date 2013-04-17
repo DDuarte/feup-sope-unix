@@ -446,7 +446,7 @@ time_t getFileLastModifiedTime(const char *dir, const char *fileName)
     return newFStat.st_mtime;
 }
 
-void iter_to_folder(int iter, const char *dst, time_t startTime, int dt, char **name) // iter to folder name
+void iter_to_folder(int iter, const char* dst, time_t startTime, int dt, char** name)
 {
     time_t ti = startTime + iter * dt;
     struct tm *timestruct = gmtime(&ti);

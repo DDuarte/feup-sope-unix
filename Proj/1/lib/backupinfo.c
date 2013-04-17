@@ -6,8 +6,6 @@
 #include "vector.h"
 #include "fileinfo.h"
 
-#define DEBUG_STR printf("%s, %d", __FUNCTION__, __LINE__);
-
 void backup_info_new(backup_info* bi)
 {
     assert(bi);
@@ -28,7 +26,7 @@ int backup_info_read(FILE* source, backup_info* result)
 
     result->iter = iter;
 
-    file_info tempFi; 
+    file_info tempFi;
     file_info_new(&tempFi, NULL);
 
     while (file_info_read(source, &tempFi) != EOF)
