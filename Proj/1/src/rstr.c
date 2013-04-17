@@ -151,6 +151,7 @@ int main(int argc, char const *argv[])
     }
 
     backup_info backup_to_restore;
+	backup_info_new(&backup_to_restore);
     if (backup_info_read(backup_info_file, &backup_to_restore) != 0)
     {
         fprintf(stderr, "backup_info_read failed.");
