@@ -12,22 +12,12 @@
 #include <time.h>
 
 #include "vector.h"
-
+#include "defines.h"
 #include "backupinfo.h"
 #include "fileinfo.h"
 
-#define DEBUG 0
-
 static bool EXECUTING = true;
 static time_t initIterTime;
-
-#define BACKUP_FILE_INFO_NAME "__bckpinfo__"
-
-#if DEBUG
-#define DEBUG_STR printf("%s, %d\n", __FUNCTION__, __LINE__);
-#else
-#define DEBUG_STR
-#endif
 
 // __bckpinfo__
 // + addedFile n
@@ -165,10 +155,8 @@ int main(int argc, const char* argv[])
                     exit(1);
                 }
 
-                char newFilePathName[1024] = "";
-                strcat(newFilePathName, newFolderPathName);
-                strcat(newFilePathName, "/");
-                strcat(newFilePathName, BACKUP_FILE_INFO_NAME);
+                char newFilePathName[1024];
+                snprintf(newFilePathName, 1024, "%s/%s", newFolderPathName, BACKUP_FILE_INFO_NAME);
 
                 FILE* newFile = fopen(newFilePathName, "w");
                 if (newFile == NULL)
@@ -198,10 +186,8 @@ int main(int argc, const char* argv[])
 
                 char* prevFolderPathName = NULL;
                 iter_to_folder(iteration - 1, destdirstr, initIterTime, dt, &prevFolderPathName);
-                char prevFilePathName[1024] = "";
-                strcat(prevFilePathName, prevFolderPathName);
-                strcat(prevFilePathName, "/");
-                strcat(prevFilePathName, BACKUP_FILE_INFO_NAME);
+                char prevFilePathName[1024];
+                snprintf(prevFilePathName, 1024, "%s/%s", prevFolderPathName, BACKUP_FILE_INFO_NAME);
 
 
                 FILE* prevFile = fopen(prevFilePathName, "r");
@@ -231,11 +217,8 @@ int main(int argc, const char* argv[])
                     exit(1);
                 }
 
-
-                char newFilePathName[1024] = "";
-                strcat(newFilePathName, newFolderPathName);
-                strcat(newFilePathName, "/");
-                strcat(newFilePathName, BACKUP_FILE_INFO_NAME);
+                char newFilePathName[1024];
+                snprintf(newFilePathName, 1024, "%s/%s", newFolderPathName, BACKUP_FILE_INFO_NAME);
 
                 FILE* newFile = fopen(newFilePathName, "w");
                 if (newFile == NULL)
@@ -251,7 +234,7 @@ int main(int argc, const char* argv[])
 
                 free(prevFolderPathName);
                 free(newFolderPathName);
-                
+
             }
 
             return EXIT_SUCCESS;
@@ -280,9 +263,7 @@ int main(int argc, const char* argv[])
                     return EXIT_FAILURE;
                 }
                 else
-                {
                     printf("Child with pid %d exited successfully.\n", pidChild);
-                }
             }
             iteration++;
         }
@@ -326,13 +307,14 @@ void sigchil_handler(int signo)
 
 int backup(const char* src, const char* dst, backup_info* prev, backup_info* curr, time_t initTime, int dt)
 {
-    if (!curr) { return -1; }
+    if (!curr)
+        return -1;
 
     struct dirent** files;
     int numberOfFiles = scandir(src, &files, regularFileSelector, alphasort);
 
-    if (!prev) 
-    {   
+    if (!prev)
+    {
         file_info fi;
         file_info_new(&fi,"");
         fi.iter = 0;
@@ -345,8 +327,8 @@ int backup(const char* src, const char* dst, backup_info* prev, backup_info* cur
         }
 
         // Copy Files
-        
-    } 
+
+    }
     else
     {
         curr->iter = prev->iter + 1;
@@ -373,29 +355,22 @@ int backup(const char* src, const char* dst, backup_info* prev, backup_info* cur
                             fi.state = STATE_MODIFIED;
                         else
                             fi.state = STATE_INALTERED;
-
                     }
                     else if (cmp > 0)
-                    {
                         fi.state = STATE_ADDED;
-                    }
                     else // cmp < 0
-                    {
                         fi.state = STATE_REMOVED;
-                    }
 
-                    if (fi.state == STATE_REMOVED) {
+                    if (fi.state == STATE_REMOVED)
                         file_info_set_name(&fi, prevFi->fileName);
-                    }
-                    else {
+                    else
                         file_info_set_name(&fi, files[j]->d_name);
-                    }
 
                     if (fi.state == STATE_ADDED)
                         fi.iter = curr->iter;
                     else if (fi.state == STATE_INALTERED && prevFi->state == STATE_MODIFIED)
                         fi.iter = prev->iter;
-                    else 
+                    else
                         fi.iter = prevFi->iter;
 
                     backup_info_add_file(curr, &fi);
@@ -436,7 +411,6 @@ int backup(const char* src, const char* dst, backup_info* prev, backup_info* cur
                 file_info_set_name(&fi, files[j]->d_name);
                 backup_info_add_file(curr, &fi);
             }
-
         }
 
         // Copy Added and Modified Files
@@ -451,11 +425,9 @@ int regularFileSelector(const struct dirent* file)
 
 time_t getFileLastModifiedTime(const char* dir, const char* fileName)
 {
-    char fPath[1024] = "";
-    strcpy(fPath, dir);
-    strcat(fPath, "/");
-    strcat(fPath, fileName);
-    
+    char fPath[1024];
+    snprintf(fPath, 1024, "%s/%s", dir, fileName);
+
     struct stat newFStat;
     stat(fPath, &newFStat);
 
@@ -464,14 +436,14 @@ time_t getFileLastModifiedTime(const char* dir, const char* fileName)
 
 void iter_to_folder(int iter, const char* dst, time_t startTime, int dt, char** name) // iter to folder name
 {
-    // "y_m_d_h_m_s"
     time_t ti = startTime + iter * dt;
     struct tm* timestruct = gmtime(&ti);
-    char buff[2000];
-    sprintf(buff, "%s/%d_%d_%d_%d_%d_%d", dst, timestruct->tm_year + 1900, timestruct->tm_mon + 1, timestruct->tm_mday, timestruct->tm_hour + 1, timestruct->tm_min, timestruct->tm_sec);
+
+    char buff[80];
+    strftime(buff, 80, "%Y_%m_%d_%H_%M_%S", timestruct);
+
     int size = strlen(buff);
-    if (size != 0)
-        *name = malloc((size+1) * sizeof(char));
+    *name = malloc((size + 1) * sizeof(char));
     strncpy(*name, buff, size);
     (*name)[size] = '\0';
 }

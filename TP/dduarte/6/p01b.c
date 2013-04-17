@@ -34,8 +34,5 @@ int main()
     pthread_join(ta, NULL);
     pthread_join(tb, NULL);
 
-    int* a;
-    printf("%d", *a);
-
     return 0;
 }
