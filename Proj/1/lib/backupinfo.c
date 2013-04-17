@@ -14,6 +14,20 @@ void backup_info_new(backup_info* bi)
     vector_new(&bi->file_list);
 }
 
+void backup_info_free(backup_info* bi)
+{
+    assert(bi);
+
+    for (int i = 0; i < vector_size(&bi->file_list); ++i)
+    {
+        void* element = vector_get(&bi->file_list, i);
+        file_info_free((file_info*)element);
+        free(element);
+    }
+
+    vector_free(&bi->file_list);
+}
+
 int backup_info_read(FILE* source, backup_info* result)
 {
     assert(source);
@@ -35,7 +49,6 @@ int backup_info_read(FILE* source, backup_info* result)
         file_info_copy(&tempFi, &fi);
         vector_push_back(&result->file_list, fi);
     }
-
 
     file_info_free(&tempFi);
 
