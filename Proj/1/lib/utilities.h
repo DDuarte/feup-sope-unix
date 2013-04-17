@@ -1,5 +1,7 @@
-#ifndef DEFINES_H_
-#define DEFINES_H_
+#ifndef UTILITIES_H_
+#define UTILITIES_H_
+
+#include <time.h>
 
 #ifndef DEBUG
 #  define DEBUG 1
@@ -12,5 +14,7 @@
 #endif
 
 #define BACKUP_FILE_INFO_NAME "__bckpinfo__"
+
+void iter_to_folder(int iter, const char* dst, time_t startTime, int dt, char** name);
 
 #endif

@@ -31,8 +31,6 @@ time_t getFileLastModifiedTime(const char* dir, const char* file);
 int regularFileSelector(const struct dirent* file);
 int folderSelection(const struct dirent* file);
 
-void iter_to_folder(int iter, const char* dst, time_t startTime, int dt, char** name); // iter to folder name
-
 /**
  * Prints information on how to use this program
  * @param err if true, info will be printed to stderr; otherwise stdout
@@ -444,18 +442,4 @@ time_t getFileLastModifiedTime(const char* dir, const char* fileName)
     stat(fPath, &newFStat);
 
     return newFStat.st_mtime;
-}
-
-void iter_to_folder(int iter, const char* dst, time_t startTime, int dt, char** name)
-{
-    time_t ti = startTime + iter * dt;
-    struct tm* timestruct = gmtime(&ti);
-    char buff[80];
-    strftime(buff, 80, "%Y_%m_%d_%H_%M_%S", timestruct);
-
-    int size = strlen(buff) + strlen(dst) + 1;
-    *name = malloc((size + 1) * sizeof(char));
-
-    sprintf(*name, "%s/%s", dst, buff);
-    (*name)[size] = '\0';
 }
