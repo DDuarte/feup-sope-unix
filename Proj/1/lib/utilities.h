@@ -3,13 +3,14 @@
 
 #include <time.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #ifndef DEBUG
 #  define DEBUG 1
 #endif
 
 #if DEBUG
-#  define DEBUG_STR printf("%s, %d\n", __FUNCTION__, __LINE__);
+#  define DEBUG_STR fprintf(stderr, "%s, %d\n", __FUNCTION__, __LINE__);
 #else
 #  define DEBUG_STR
 #endif

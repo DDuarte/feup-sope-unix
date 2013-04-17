@@ -238,6 +238,7 @@ int main(int argc, const char* argv[])
                     backup_info_write(newFile, &current);
                     fclose(newFile);
 
+
                     for (int i = 0; i < vector_size(&current.file_list); ++i)
                     {
                         file_info* fi = vector_get(&current.file_list, i);
@@ -346,7 +347,7 @@ bool backup(const char* src, const char* dst, backup_info* prev, backup_info* cu
         time_t prevBackupTime = initTime + prev->iter * dt;
         file_info fi;
         file_info_new(&fi, "");
-        while (i < prevNumberOfFiles || j < numberOfFiles)
+        while (i < prevNumberOfFiles && j < numberOfFiles)
         {
             file_info* prevFi = vector_get(&prev->file_list, i);
             switch (prevFi->state)
