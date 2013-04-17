@@ -1,6 +1,6 @@
 CC=gcc
 
-CFLAGS= -Wall -std=gnu11
+CFLAGS= -Wall -std=gnu11 -g
 LDFLAGS=
 
 SRC_DIR= src

@@ -44,11 +44,7 @@ int backup_info_read(FILE* source, backup_info* result)
     file_info_new(&tempFi, NULL);
 
     while (file_info_read(source, &tempFi) != EOF)
-    {
-        file_info* fi = NULL;
-        file_info_copy(&tempFi, &fi);
-        vector_push_back(&result->file_list, fi);
-    }
+        backup_info_add_file(result, &tempFi);
 
     file_info_free(&tempFi);
 

@@ -11,9 +11,7 @@ void file_info_new(file_info* fi, const char* fileName)
     fi->fileName = NULL;
 
     if (fileName)
-    {
         file_info_set_name(fi, fileName);
-    }
 
     fi->state = STATE_INALTERED;
     fi->iter = -1;
@@ -24,7 +22,10 @@ void file_info_free(file_info* fi)
     assert(fi);
 
     if (fi->fileName)
+    {
         free(fi->fileName);
+        fi->fileName = NULL;
+    }
 }
 
 void file_info_set_name(file_info* fi, const char* fileName)

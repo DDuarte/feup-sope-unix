@@ -52,6 +52,13 @@ int main(int argc, char const *argv[])
             if (destdir == NULL)
             {
                 fprintf(stderr, "Could not open directory %s after creation (%s).\n", srcdirstr, strerror(errno));
+                closedir(srcdir);
+                return EXIT_FAILURE;
+            }
+            else
+            {
+                fprintf(stderr, "Could not create directory %s (%s).\n", destdirstr, strerror(errno));
+                closedir(srcdir);
                 return EXIT_FAILURE;
             }
         }
@@ -69,15 +76,19 @@ int main(int argc, char const *argv[])
         if (strcmp(srcdirent->d_name, ".") == 0 || strcmp(srcdirent->d_name, "..") == 0)
             continue;
 
+        char* name = malloc((strlen(srcdirent->d_name) + 1) * sizeof(char));
+        strcpy(name, srcdirent->d_name);
         vector_push_back(&subdirsstr, srcdirent->d_name);
     }
+
+    closedir(srcdir);
+    srcdir = NULL;
 
     if (vector_size(&subdirsstr) == 0)
     {
         printf("Nothing to restore.\n");
 
         vector_free(&subdirsstr);
-        closedir(srcdir);
         closedir(destdir);
         return EXIT_SUCCESS;
     }
@@ -127,15 +138,14 @@ int main(int argc, char const *argv[])
     } while (iter_to_restore == NULL);
 
     char buffer[512];
-    snprintf(buffer, 512, "%s/%s", iter_to_restore, BACKUP_FILE_INFO_NAME);
+    snprintf(buffer, 512, "%s/%s/%s", srcdirstr, iter_to_restore, BACKUP_FILE_INFO_NAME);
 
     FILE* backup_info_file = fopen(buffer, "r");
     if (backup_info_file == NULL)
     {
-        perror("fopen");
+        perror("fopen(buffer)");
 
         vector_free(&subdirsstr);
-        closedir(srcdir);
         closedir(destdir);
         return EXIT_FAILURE;
     }
@@ -146,22 +156,22 @@ int main(int argc, char const *argv[])
         fprintf(stderr, "backup_info_read failed.");
 
         vector_free(&subdirsstr);
-        closedir(srcdir);
         closedir(destdir);
         fclose(backup_info_file);
         return EXIT_FAILURE;
     }
 
+    fclose(backup_info_file);
+    backup_info_file = NULL;
+
     for (int i = 0; i < vector_size(&backup_to_restore.file_list); ++i)
     {
         file_info* file = (file_info*)vector_get(&backup_to_restore.file_list, i);
-        printf("-- %s %c %i\n", file->fileName, file->state, file->iter);
+        printf("-- %s %c %d\n", file->fileName, file->state, file->iter);
     }
 
     vector_free(&subdirsstr);
-    closedir(srcdir);
     closedir(destdir);
-    fclose(backup_info_file);
     backup_info_free(&backup_to_restore);
 
     return EXIT_SUCCESS;

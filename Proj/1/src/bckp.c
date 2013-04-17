@@ -195,8 +195,6 @@ int main(int argc, const char* argv[])
                 char prevFilePathName[1024];
                 snprintf(prevFilePathName, 1024, "%s/%s/%s", destdirstr, prevFolderPathName, BACKUP_FILE_INFO_NAME);
 
-                printf("PrevFolderPathName: %s\n", prevFolderPathName);
-
                 FILE* prevFile = fopen(prevFilePathName, "r");
                 if (prevFile == NULL)
                 {
@@ -216,7 +214,6 @@ int main(int argc, const char* argv[])
                     char* newFolderPathName = NULL;
                     iter_to_folder(iteration, destdirstr, initIterTime, dt, &newFolderPathName);
 
-                    printf("NewFolderName: %s\n", newFolderPathName);
                     if (mkdir(newFolderPathName, 0775) != 0)
                     {
                         perror("mkdir");
