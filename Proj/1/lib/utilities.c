@@ -14,9 +14,9 @@
 void iter_to_folder(int iter, const char* dst, time_t startTime, int dt, char** name)
 {
     time_t ti = startTime + iter * dt;
-    struct tm* timestruct = gmtime(&ti);
+    struct tm* timestruct = localtime(&ti);
     char buff[80];
-    strftime(buff, 80, "%Y_%m_%d_%H_%M_%S", timestruct);
+    strftime(buff, 80, BACKUP_FOLDER_NAME_FORMAT, timestruct);
 
     int size = strlen(buff) + strlen(dst) + 1;
     *name = malloc((size + 1) * sizeof(char));
@@ -47,9 +47,8 @@ bool copy_file(const char* src_dir, const char* dst_dir, const char* fileName)
     char dstFileName[1024];
     sprintf(dstFileName, "%s/%s", dst_dir, fileName);
 
-
     int sourcefd = open(srcFileName, O_RDONLY);
-    if (sourcefd == -1)
+    if (sourcefd < 0)
     {
         perror("Error opening source file");
         returnCode = false;
@@ -72,12 +71,10 @@ bool copy_file(const char* src_dir, const char* dst_dir, const char* fileName)
         returnCode = false;
         goto ret;
     }
-    char buffer[BUFFER_SIZE];
 
+    char buffer[BUFFER_SIZE];
     for (int size = read(sourcefd, buffer, BUFFER_SIZE); size != 0; size = read(sourcefd, buffer, BUFFER_SIZE))
-    {
         write(destfd, buffer, size);
-    }
 
 ret:
     if (sourcefd != -1) close(sourcefd);

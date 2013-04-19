@@ -90,6 +90,12 @@ int main(int argc, const char* argv[])
         return EXIT_FAILURE;
     }
 
+    if (strcmp(srcdirstr, destdirstr) == 0)
+    {
+        fprintf(stderr, "Cannot do backups to the same directory.\n");
+        return EXIT_FAILURE;
+    }
+
     DIR* srcdir = opendir(srcdirstr);
     if (srcdir == NULL)
     {
@@ -335,7 +341,6 @@ bool backup(const char* src, const char* dst, backup_info* prev, backup_info* cu
             file_info_set_name(&fi, files[i]->d_name);
             backup_info_add_file(curr, &fi);
         }
-
     }
     else
     {
@@ -372,12 +377,8 @@ bool backup(const char* src, const char* dst, backup_info* prev, backup_info* cu
                 else
                     file_info_set_name(&fi, files[j]->d_name);
 
-                if (fi.state == STATE_ADDED)
+                if (fi.state == STATE_ADDED || fi.state == STATE_MODIFIED)
                     fi.iter = curr->iter;
-                else if (prevFi->state == STATE_MODIFIED)
-                    fi.iter = prev->iter;
-                else if (fi.state == STATE_INALTERED && prevFi->state == STATE_MODIFIED)
-                    fi.iter = prev->iter;
                 else
                     fi.iter = prevFi->iter;
 
@@ -399,7 +400,7 @@ bool backup(const char* src, const char* dst, backup_info* prev, backup_info* cu
             }
         }
 
-        if (i < prevNumberOfFiles) //Last files where removed
+        if (i < prevNumberOfFiles) //Last files were removed
         {
             altered = true;
             fi.state = STATE_REMOVED;
@@ -413,7 +414,7 @@ bool backup(const char* src, const char* dst, backup_info* prev, backup_info* cu
                 backup_info_add_file(curr, &fi);
             }
         }
-        else if (j < numberOfFiles) // Last new files where added
+        else if (j < numberOfFiles) // Last new files were added
         {
             altered = true;
             fi.state = STATE_ADDED;

@@ -8,10 +8,17 @@
 #include <dirent.h>
 #include <unistd.h>
 
-#include "../lib/backupinfo.h"
-#include "../lib/vector.h"
-#include "../lib/utilities.h"
-#include "../lib/fileinfo.h"
+#define _XOPEN_SOURCE // required for strptime
+#define __USE_XOPEN
+#include <time.h>
+
+#include "backupinfo.h"
+#include "vector.h"
+#include "utilities.h"
+#include "fileinfo.h"
+
+//#define print_var_s(var) fprintf(stderr, "var %s: %s\n", #var, var)
+//#define print_var_i(var) fprintf(stderr, "var %s: %d\n", #var, var)
 
 /**
  * Prints information on how to use this program
@@ -55,12 +62,12 @@ int main(int argc, char const *argv[])
                 closedir(srcdir);
                 return EXIT_FAILURE;
             }
-            else
-            {
-                fprintf(stderr, "Could not create directory %s (%s).\n", destdirstr, strerror(errno));
-                closedir(srcdir);
-                return EXIT_FAILURE;
-            }
+        }
+        else
+        {
+            fprintf(stderr, "Could not create directory %s (%s).\n", destdirstr, strerror(errno));
+            closedir(srcdir);
+            return EXIT_FAILURE;
         }
     }
 
@@ -78,7 +85,7 @@ int main(int argc, char const *argv[])
 
         char* name = malloc((strlen(srcdirent->d_name) + 1) * sizeof(char));
         strcpy(name, srcdirent->d_name);
-        vector_push_back(&subdirsstr, srcdirent->d_name);
+        vector_push_back(&subdirsstr, name);
     }
 
     closedir(srcdir);
@@ -145,17 +152,21 @@ int main(int argc, char const *argv[])
     {
         perror("fopen(buffer)");
 
+        for (int i = 0; i < vector_size(&subdirsstr); ++i)
+            free(vector_get(&subdirsstr, i));
         vector_free(&subdirsstr);
         closedir(destdir);
         return EXIT_FAILURE;
     }
 
     backup_info backup_to_restore;
-	backup_info_new(&backup_to_restore);
+    backup_info_new(&backup_to_restore);
     if (backup_info_read(backup_info_file, &backup_to_restore) != 0)
     {
         fprintf(stderr, "backup_info_read failed.");
 
+        for (int i = 0; i < vector_size(&subdirsstr); ++i)
+            free(vector_get(&subdirsstr, i));
         vector_free(&subdirsstr);
         closedir(destdir);
         fclose(backup_info_file);
@@ -165,12 +176,35 @@ int main(int argc, char const *argv[])
     fclose(backup_info_file);
     backup_info_file = NULL;
 
+    struct tm tp;
+    strptime((const char*)vector_get(&subdirsstr, 0), "%Y_%m_%d_%H_%M_%S", &tp);
+    time_t start_time = mktime(&tp);
+
+    strptime(iter_to_restore, "%Y_%m_%d_%H_%M_%S", &tp);
+    time_t current_time = mktime(&tp);
+
+    int dt;
+    if (backup_to_restore.iter == 0)
+        dt = 0;
+    else
+        dt = (current_time - start_time) / backup_to_restore.iter;
+
     for (int i = 0; i < vector_size(&backup_to_restore.file_list); ++i)
     {
         file_info* file = (file_info*)vector_get(&backup_to_restore.file_list, i);
-        printf("-- %s %c %d\n", file->fileName, file->state, file->iter);
+
+        char* source_folder_name;
+        iter_to_folder(file->iter, srcdirstr, start_time, dt, &source_folder_name);
+
+        if (file->state == STATE_REMOVED)
+            continue;
+
+        fork_copy_file(source_folder_name, destdirstr, file->fileName);
+        free(source_folder_name);
     }
 
+    for (int i = 0; i < vector_size(&subdirsstr); ++i)
+        free(vector_get(&subdirsstr, i));
     vector_free(&subdirsstr);
     closedir(destdir);
     backup_info_free(&backup_to_restore);
@@ -184,3 +218,32 @@ void print_usage(bool err)
                                    "  srcdir  - directory that was used to backup;\n"
                                    "  destdir - destination of the restore.\n");
 }
+
+/*
+
+int main(int argc, char const *argv[])
+{
+    struct tm tp;
+    //strptime((const char*)vector_get(&subdirsstr, 0), BACKUP_FOLDER_NAME_FORMAT, &tp);
+    strptime("2013_04_19_00_50_08", "%Y_%m_%d_%H_%M_%S", &tp);
+    time_t start_time = mktime(&tp);
+
+    struct tm tp2;
+    //strptime(iter_to_restore, BACKUP_FOLDER_NAME_FORMAT, &tp2);
+    strptime("2013_04_19_00_50_08", "%Y_%m_%d_%H_%M_%S", &tp2);
+    time_t current_time = mktime(&tp2);
+
+    // Thu, 18 Apr 2013 23:50:08 GMT
+    // Fri, 19 Apr 2013 00:50:08 GMT
+
+    printf("tp.tm_gmtoff %lu, tp.tm_hour %i, tp.tm_isdst %i, tp.tm_mday %i, tp.tm_min %i, tp.tm_mon %i, tp.tm_sec %i, tp.tm_wday %i, tp.tm_yday %i, tp.tm_year %i, tp.tm_zone: %s\n", tp.tm_gmtoff, tp.tm_hour, tp.tm_isdst, tp.tm_mday, tp.tm_min, tp.tm_mon, tp.tm_sec, tp.tm_wday, tp.tm_yday, tp.tm_year, tp.tm_zone);
+    printf("tp.tm_gmtoff %lu, tp.tm_hour %i, tp.tm_isdst %i, tp.tm_mday %i, tp.tm_min %i, tp.tm_mon %i, tp.tm_sec %i, tp.tm_wday %i, tp.tm_yday %i, tp.tm_year %i, tp.tm_zone: %s\n", tp2.tm_gmtoff, tp2.tm_hour, tp2.tm_isdst, tp2.tm_mday, tp2.tm_min, tp2.tm_mon, tp2.tm_sec, tp2.tm_wday, tp2.tm_yday, tp2.tm_year, tp2.tm_zone);
+
+    //printf("s1: %s, s2: %s\n", vector_get(&subdirsstr, 0), iter_to_restore);
+    printf("t1: %s, t2: %s\n", ctime(&start_time), ctime(&current_time));
+    printf("r1: %lu, r2: %lu\n", start_time, current_time);
+    printf("diff: %f\n", difftime(start_time, current_time));
+    return 0;
+}
+
+*/
