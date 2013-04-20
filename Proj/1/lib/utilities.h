@@ -5,6 +5,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+/** @defgroup utilities utilities
+ * @{
+ * Functions, macros and constants that do not fit in other categories
+ */
+
 #ifndef DEBUG
 #  define DEBUG 0
 #endif
@@ -36,7 +41,7 @@ void iter_to_folder(int iter, const char* dst, time_t startTime, int dt, char** 
  * Copy file between two directories
  * @param  src_dir  Source directory name
  * @param  dst_dir  Destination directory name
- * @param  fileName File name of the file to copy
+ * @param  file_name File name of the file to copy
  * @return          true if successful, false otherwise
  */
 bool copy_file(const char* src_dir, const char* dst_dir, const char* file_name);
@@ -45,8 +50,10 @@ bool copy_file(const char* src_dir, const char* dst_dir, const char* file_name);
  * Performs a file copy inside a fork'ed process
  * @param  src_dir  Source directory name
  * @param  dst_dir  Destination directory name
- * @param  fileName File name of the file to copy
+ * @param  file_name File name of the file to copy
  */
 void fork_copy_file(const char* src_dir, const char* dst_dir, const char* file_name);
+
+/**@}*/
 
 #endif

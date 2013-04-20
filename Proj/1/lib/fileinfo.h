@@ -3,6 +3,11 @@
 
 #include <stdio.h>
 
+/** @defgroup backup_shared backup_shared
+ * @{
+ * Structs and functions used by both backup and restore programs.
+ */
+
 /**
  *  Possible backup file states
  */
@@ -65,5 +70,7 @@ void file_info_to_string(file_info* fi, char* dest);
  * @return        0 on success, different otherwise, EOF if end of file
  */
 int file_info_read(FILE* source, file_info* result);
+
+/**@}*/
 
 #endif

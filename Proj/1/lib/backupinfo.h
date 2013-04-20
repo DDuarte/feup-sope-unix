@@ -7,6 +7,11 @@
 #include "vector.h"
 #include "fileinfo.h"
 
+/** @defgroup backup_shared backup_shared
+ * @{
+ * Structs and functions used by both backup and restore programs.
+ */
+
 /**
  * Holds information of a certain backup (iteration, lits of files)
  */
@@ -50,5 +55,7 @@ int backup_info_write(FILE* dest, const backup_info* backup); // write to file
  * @param  fi file_info struct to add. Must not be NULL.
  */
 void backup_info_add_file(backup_info* bi, file_info* fi);
+
+/**@}*/
 
 #endif

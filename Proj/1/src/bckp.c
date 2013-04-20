@@ -16,6 +16,11 @@
 #include "backupinfo.h"
 #include "fileinfo.h"
 
+/** @defgroup backup backup
+ * @{
+ * Backup program.
+ */
+
 static bool Executing = true; ///< Boolean to know if backup is running or not
 static time_t InitIterTime; ///< Backup initial time
 
@@ -466,3 +471,5 @@ time_t get_file_last_modified_time(const char* dir, const char* file_name)
 
     return new_FStat.st_mtime;
 }
+
+/**@}*/

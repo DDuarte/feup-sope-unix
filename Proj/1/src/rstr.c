@@ -17,6 +17,11 @@
 #include "utilities.h"
 #include "fileinfo.h"
 
+/** @defgroup restore restore
+ * @{
+ * Restore program.
+ */
+
 //#define print_var_s(var) fprintf(stderr, "var %s: %s\n", #var, var)
 //#define print_var_i(var) fprintf(stderr, "var %s: %d\n", #var, var)
 
@@ -205,11 +210,11 @@ int main(int argc, char const *argv[])
     {
         file_info* file = (file_info*)vector_get(&backup_to_restore.file_list, i);
 
-        char* source_folder_name;
-        iter_to_folder(file->iter, srcdirstr, start_time, dt, &source_folder_name);
-
         if (file->state == STATE_REMOVED)
             continue;
+
+        char* source_folder_name;
+        iter_to_folder(file->iter, srcdirstr, start_time, dt, &source_folder_name);
 
         printf("\trestoring %s\t(from %s)\n", file->file_name, source_folder_name);
 
@@ -232,3 +237,5 @@ void print_usage(bool err)
                                    "  srcdir  - directory that was used to backup;\n"
                                    "  destdir - destination of the restore.\n");
 }
+
+/**@}*/
