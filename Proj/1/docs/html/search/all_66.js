@@ -12,6 +12,6 @@ var searchData=
   ['file_5fstate',['file_state',['../group__backup__shared.html#gadf89ddc0b440f99d68b5b8084c1a1bb4',1,'fileinfo.h']]],
   ['fileinfo_2ec',['fileinfo.c',['../fileinfo_8c.html',1,'']]],
   ['fileinfo_2eh',['fileinfo.h',['../fileinfo_8h.html',1,'']]],
-  ['folder_5fselection',['folder_selection',['../group__backup.html#gaf657123e950a432ff060f94b53b1bc9a',1,'bckp.c']]],
+  ['folder_5fselection',['folder_selection',['../group__backup.html#gaf657123e950a432ff060f94b53b1bc9a',1,'folder_selection(const struct dirent *file):&#160;bckp.c'],['../group__restore.html#gaf657123e950a432ff060f94b53b1bc9a',1,'folder_selection(const struct dirent *file):&#160;rstr.c']]],
   ['fork_5fcopy_5ffile',['fork_copy_file',['../group__utilities.html#ga15a603527486036bfd3663aa20efbf68',1,'fork_copy_file(const char *src_dir, const char *dst_dir, const char *file_name):&#160;utilities.c'],['../group__utilities.html#ga15a603527486036bfd3663aa20efbf68',1,'fork_copy_file(const char *src_dir, const char *dst_dir, const char *file_name):&#160;utilities.c']]]
 ];

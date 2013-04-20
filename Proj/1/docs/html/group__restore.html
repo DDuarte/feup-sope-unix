@@ -109,12 +109,39 @@ $(document).ready(function(){initNavTree('group__restore.html','');});
 Functions</h2></td></tr>
 <tr class="memitem:ga0949419e1b96c735e1bafe34db1b74be"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__restore.html#ga0949419e1b96c735e1bafe34db1b74be">print_usage</a> (bool err)</td></tr>
 <tr class="memdesc:ga0949419e1b96c735e1bafe34db1b74be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints information on how to use this program.  <a href="#ga0949419e1b96c735e1bafe34db1b74be"></a><br/></td></tr>
+<tr class="memitem:gaf657123e950a432ff060f94b53b1bc9a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__restore.html#gaf657123e950a432ff060f94b53b1bc9a">folder_selection</a> (const struct dirent *file)</td></tr>
+<tr class="memdesc:gaf657123e950a432ff060f94b53b1bc9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function used in scandir to select our backup subdirectories.  <a href="#gaf657123e950a432ff060f94b53b1bc9a"></a><br/></td></tr>
 <tr class="memitem:gabf9e6b7e6f15df4b525a2e7705ba3089"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__restore.html#gabf9e6b7e6f15df4b525a2e7705ba3089">main</a> (int argc, char const *argv[])</td></tr>
 <tr class="memdesc:gabf9e6b7e6f15df4b525a2e7705ba3089"><td class="mdescLeft">&#160;</td><td class="mdescRight">Entry point to this program.  <a href="#gabf9e6b7e6f15df4b525a2e7705ba3089"></a><br/></td></tr>
 </table>
 <a name="details" id="details"></a><h2>Detailed Description</h2>
 <p>Restore program. </p>
 <h2>Function Documentation</h2>
+<a class="anchor" id="gaf657123e950a432ff060f94b53b1bc9a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int folder_selection </td>
+          <td>(</td>
+          <td class="paramtype">const struct dirent *&#160;</td>
+          <td class="paramname"><em>file</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Function used in scandir to select our backup subdirectories. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">file</td><td>Dirent </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Returns 1 if valid dirent, 0 otherwise </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="gabf9e6b7e6f15df4b525a2e7705ba3089"></a>
 <div class="memitem">
 <div class="memproto">
@@ -149,7 +176,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Program exit status code </dd></dl>
 
-<p>Definition at line <a class="el" href="rstr_8c_source.html#l00040">40</a> of file <a class="el" href="rstr_8c_source.html">rstr.c</a>.</p>
+<p>Definition at line <a class="el" href="rstr_8c_source.html#l00046">46</a> of file <a class="el" href="rstr_8c_source.html">rstr.c</a>.</p>
 <div class="fragment"><div class="line">{</div>
 <div class="line">    <span class="comment">// Print usage if we receive -h or --help</span></div>
 <div class="line">    <span class="keywordflow">if</span> (argc == 2 &amp;&amp; (strcmp(argv[1], <span class="stringliteral">&quot;-h&quot;</span>) == 0 || strcmp(argv[1], <span class="stringliteral">&quot;--help&quot;</span>) == 0))</div>
@@ -178,22 +205,15 @@ Functions</h2></td></tr>
 <div class="line">    <a class="code" href="structvector__t.html">vector</a> subdirsstr;</div>
 <div class="line">    <a class="code" href="group__vector.html#ga4c767de193ea3674ab101c805d098f0d" title="Create new vector.">vector_new</a>(&amp;subdirsstr);</div>
 <div class="line"></div>
-<div class="line">    <span class="keyword">struct </span>dirent* srcdirent;</div>
-<div class="line">    <span class="keywordflow">while</span> ((srcdirent = readdir(srcdir)) != NULL)</div>
+<div class="line">    <span class="keyword">struct </span>dirent** dirs = NULL;</div>
+<div class="line">    <span class="keywordtype">int</span> size = scandir(srcdirstr, &amp;dirs, <a class="code" href="group__backup.html#gaf657123e950a432ff060f94b53b1bc9a" title="Selector used in scandir to select directories.">folder_selection</a>, alphasort);</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; size; ++i)</div>
 <div class="line">    {</div>
-<div class="line">        <span class="keywordflow">if</span> (srcdirent-&gt;d_type != DT_DIR)</div>
-<div class="line">            <span class="keywordflow">continue</span>;</div>
-<div class="line"></div>
-<div class="line">        <span class="keywordflow">if</span> (strcmp(srcdirent-&gt;d_name, <span class="stringliteral">&quot;.&quot;</span>) == 0 || strcmp(srcdirent-&gt;d_name, <span class="stringliteral">&quot;..&quot;</span>) == 0)</div>
-<div class="line">            <span class="keywordflow">continue</span>;</div>
-<div class="line"></div>
-<div class="line">        <span class="keywordtype">char</span>* name = malloc((strlen(srcdirent-&gt;d_name) + 1) * <span class="keyword">sizeof</span>(<span class="keywordtype">char</span>));</div>
-<div class="line">        strcpy(name, srcdirent-&gt;d_name);</div>
+<div class="line">        <span class="keywordtype">char</span>* name = malloc(strlen(dirs[i]-&gt;d_name) + 1);</div>
+<div class="line">        strcpy(name, dirs[i]-&gt;d_name);</div>
 <div class="line">        <a class="code" href="group__vector.html#ga0d36e1e11d647504f35299974f222766" title="Adds element to back of vector.">vector_push_back</a>(&amp;subdirsstr, name);</div>
 <div class="line">    }</div>
-<div class="line"></div>
-<div class="line">    closedir(srcdir);</div>
-<div class="line">    srcdir = NULL;</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordflow">if</span> (<a class="code" href="group__vector.html#ga1e87859f5a282ea1c1c2791ef1ad0270" title="Size of vector.">vector_size</a>(&amp;subdirsstr) == 0)</div>
 <div class="line">    {</div>
@@ -251,7 +271,8 @@ Functions</h2></td></tr>
 <div class="line">        <span class="keywordflow">if</span> (iter_to_restore == NULL)</div>
 <div class="line">            printf(<span class="stringliteral">&quot;Could not find the intended restore point. Try again.\n&quot;</span>);</div>
 <div class="line"></div>
-<div class="line">    } <span class="keywordflow">while</span> (iter_to_restore == NULL);</div>
+<div class="line">    }</div>
+<div class="line">    <span class="keywordflow">while</span> (iter_to_restore == NULL);</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordflow">if</span> (destdir == NULL)</div>
 <div class="line">    {</div>
@@ -309,14 +330,15 @@ Functions</h2></td></tr>
 <div class="line">    strptime((<span class="keyword">const</span> <span class="keywordtype">char</span>*)<a class="code" href="group__vector.html#gaa882c34b69136db7feea193d7c74935a" title="Element at position index.">vector_get</a>(&amp;subdirsstr, 0), <a class="code" href="group__utilities.html#gad5c19db1ecbdbeceee4634b977ad1177" title="Time format for the name of the backup subdirectories.">BACKUP_FOLDER_NAME_FORMAT</a>, &amp;tp);</div>
 <div class="line">    time_t start_time = mktime(&amp;tp);</div>
 <div class="line"></div>
-<div class="line">    strptime(iter_to_restore, <a class="code" href="group__utilities.html#gad5c19db1ecbdbeceee4634b977ad1177" title="Time format for the name of the backup subdirectories.">BACKUP_FOLDER_NAME_FORMAT</a>, &amp;tp);</div>
-<div class="line">    time_t current_time = mktime(&amp;tp);</div>
+<div class="line">    <span class="keyword">struct </span>tm tp1;</div>
+<div class="line">    strptime(iter_to_restore, <a class="code" href="group__utilities.html#gad5c19db1ecbdbeceee4634b977ad1177" title="Time format for the name of the backup subdirectories.">BACKUP_FOLDER_NAME_FORMAT</a>, &amp;tp1);</div>
+<div class="line">    time_t current_time = mktime(&amp;tp1);</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordtype">int</span> dt;</div>
 <div class="line">    <span class="keywordflow">if</span> (backup_to_restore.<a class="code" href="structbackup__info.html#aab6f168571c2073e01e240524b8a3da0" title="step">iter</a> == 0)</div>
 <div class="line">        dt = 0;</div>
 <div class="line">    <span class="keywordflow">else</span></div>
-<div class="line">        dt = (current_time - start_time) / backup_to_restore.<a class="code" href="structbackup__info.html#aab6f168571c2073e01e240524b8a3da0" title="step">iter</a>;</div>
+<div class="line">        dt = (difftime(current_time, start_time)) / backup_to_restore.<a class="code" href="structbackup__info.html#aab6f168571c2073e01e240524b8a3da0" title="step">iter</a>;</div>
 <div class="line"></div>
 <div class="line">    for (<span class="keywordtype">int</span> i = 0; i &lt; <a class="code" href="group__vector.html#ga1e87859f5a282ea1c1c2791ef1ad0270" title="Size of vector.">vector_size</a>(&amp;backup_to_restore.<a class="code" href="structbackup__info.html#a0066064d57d46d36349a5891f55f145f" title="vector&lt;file_info&gt;">file_list</a>); ++i)</div>
 <div class="line">    {</div>
@@ -374,7 +396,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sat Apr 20 2013 20:11:57 for SOPE - Project 1 - Backup by
+    <li class="footer">Generated on Sat Apr 20 2013 20:57:03 for SOPE - Project 1 - Backup by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.1.2 </li>
   </ul>
