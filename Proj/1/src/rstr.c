@@ -26,6 +26,12 @@
  */
 void print_usage(bool err);
 
+/**
+* Entry point to this program
+* @param  argc Number of arguments
+* @param  argv Array of arguments
+* @return Program exit status code
+*/
 int main(int argc, char const *argv[])
 {
     // Print usage if we receive -h or --help
@@ -51,25 +57,6 @@ int main(int argc, char const *argv[])
     }
 
     DIR* destdir = opendir(destdirstr);
-    if (destdir == NULL)
-    {
-        if (mkdir(destdirstr, 0775) == 0)
-        {
-            destdir = opendir(destdirstr);
-            if (destdir == NULL)
-            {
-                fprintf(stderr, "Could not open directory %s after creation (%s).\n", srcdirstr, strerror(errno));
-                closedir(srcdir);
-                return EXIT_FAILURE;
-            }
-        }
-        else
-        {
-            fprintf(stderr, "Could not create directory %s (%s).\n", destdirstr, strerror(errno));
-            closedir(srcdir);
-            return EXIT_FAILURE;
-        }
-    }
 
     vector subdirsstr;
     vector_new(&subdirsstr);
@@ -96,7 +83,8 @@ int main(int argc, char const *argv[])
         printf("Nothing to restore.\n");
 
         vector_free(&subdirsstr);
-        closedir(destdir);
+        if (destdir != NULL)
+            closedir(destdir);
         return EXIT_SUCCESS;
     }
 
@@ -111,38 +99,62 @@ int main(int argc, char const *argv[])
     {
         // User can pick restore point either by time string or iteration;
         // time string corresponds to the folder name in the backup dir, iteration start at 0;
-        // atoi returns 0 if it can't parse the string, in that case we assume that input is a
+        // if user input'ed 19 characters we assume that input is a
         //  time string and we try to find it in subdirsstr - O(n), otherwise we assume it's a
         //  iteration - O(1)
         // if not found, we ask the user for a new restore point
 
         printf("Which restore point (time or iteration)? ");
-        scanf("%s", user_input);
-
-        int iter = atoi(user_input);
-        if (iter == 0)
+        int count = scanf("%s", user_input);
+        if (count != EOF && count != 0 && count <= 19)
         {
-            for (int i = 0; i < vector_size(&subdirsstr); ++i)
+            if (strlen(user_input) == 19) // strlen("2013_04_20_16_44_21")
             {
-                if (strcmp((char*)vector_get(&subdirsstr, i), user_input) == 0)
+                for (int i = 0; i < vector_size(&subdirsstr); ++i)
                 {
-                    iter_to_restore = user_input;
+                    if (strcmp((char*)vector_get(&subdirsstr, i), user_input) == 0)
+                    {
+                        iter_to_restore = user_input;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                int iter = -1;
+                sscanf(user_input, "%d", &iter);
+                if (iter > 0 && iter <= vector_size(&subdirsstr))
+                {
+                    iter_to_restore = (char*)vector_get(&subdirsstr, iter - 1);
                     break;
                 }
             }
         }
-        else
-        {
-            if (iter > 0 && iter <= vector_size(&subdirsstr))
-            {
-                iter_to_restore = (char*)vector_get(&subdirsstr, iter - 1);
-                break;
-            }
-        }
 
-        printf("Could not find the intended restore point. Try again.\n");
+        if (iter_to_restore == NULL)
+            printf("Could not find the intended restore point. Try again.\n");
 
     } while (iter_to_restore == NULL);
+
+    if (destdir == NULL)
+    {
+        if (mkdir(destdirstr, 0775) == 0)
+        {
+            destdir = opendir(destdirstr);
+            if (destdir == NULL)
+            {
+                fprintf(stderr, "Could not open directory %s after creation (%s).\n", srcdirstr, strerror(errno));
+                closedir(srcdir);
+                return EXIT_FAILURE;
+            }
+        }
+        else
+        {
+            fprintf(stderr, "Could not create directory %s (%s).\n", destdirstr, strerror(errno));
+            closedir(srcdir);
+            return EXIT_FAILURE;
+        }
+    }
 
     char buffer[512];
     snprintf(buffer, 512, "%s/%s/%s", srcdirstr, iter_to_restore, BACKUP_FILE_INFO_NAME);
@@ -177,10 +189,10 @@ int main(int argc, char const *argv[])
     backup_info_file = NULL;
 
     struct tm tp;
-    strptime((const char*)vector_get(&subdirsstr, 0), "%Y_%m_%d_%H_%M_%S", &tp);
+    strptime((const char*)vector_get(&subdirsstr, 0), BACKUP_FOLDER_NAME_FORMAT, &tp);
     time_t start_time = mktime(&tp);
 
-    strptime(iter_to_restore, "%Y_%m_%d_%H_%M_%S", &tp);
+    strptime(iter_to_restore, BACKUP_FOLDER_NAME_FORMAT, &tp);
     time_t current_time = mktime(&tp);
 
     int dt;
@@ -199,7 +211,9 @@ int main(int argc, char const *argv[])
         if (file->state == STATE_REMOVED)
             continue;
 
-        fork_copy_file(source_folder_name, destdirstr, file->fileName);
+        printf("\trestoring %s\t(from %s)\n", file->file_name, source_folder_name);
+
+        fork_copy_file(source_folder_name, destdirstr, file->file_name);
         free(source_folder_name);
     }
 
@@ -218,32 +232,3 @@ void print_usage(bool err)
                                    "  srcdir  - directory that was used to backup;\n"
                                    "  destdir - destination of the restore.\n");
 }
-
-/*
-
-int main(int argc, char const *argv[])
-{
-    struct tm tp;
-    //strptime((const char*)vector_get(&subdirsstr, 0), BACKUP_FOLDER_NAME_FORMAT, &tp);
-    strptime("2013_04_19_00_50_08", "%Y_%m_%d_%H_%M_%S", &tp);
-    time_t start_time = mktime(&tp);
-
-    struct tm tp2;
-    //strptime(iter_to_restore, BACKUP_FOLDER_NAME_FORMAT, &tp2);
-    strptime("2013_04_19_00_50_08", "%Y_%m_%d_%H_%M_%S", &tp2);
-    time_t current_time = mktime(&tp2);
-
-    // Thu, 18 Apr 2013 23:50:08 GMT
-    // Fri, 19 Apr 2013 00:50:08 GMT
-
-    printf("tp.tm_gmtoff %lu, tp.tm_hour %i, tp.tm_isdst %i, tp.tm_mday %i, tp.tm_min %i, tp.tm_mon %i, tp.tm_sec %i, tp.tm_wday %i, tp.tm_yday %i, tp.tm_year %i, tp.tm_zone: %s\n", tp.tm_gmtoff, tp.tm_hour, tp.tm_isdst, tp.tm_mday, tp.tm_min, tp.tm_mon, tp.tm_sec, tp.tm_wday, tp.tm_yday, tp.tm_year, tp.tm_zone);
-    printf("tp.tm_gmtoff %lu, tp.tm_hour %i, tp.tm_isdst %i, tp.tm_mday %i, tp.tm_min %i, tp.tm_mon %i, tp.tm_sec %i, tp.tm_wday %i, tp.tm_yday %i, tp.tm_year %i, tp.tm_zone: %s\n", tp2.tm_gmtoff, tp2.tm_hour, tp2.tm_isdst, tp2.tm_mday, tp2.tm_min, tp2.tm_mon, tp2.tm_sec, tp2.tm_wday, tp2.tm_yday, tp2.tm_year, tp2.tm_zone);
-
-    //printf("s1: %s, s2: %s\n", vector_get(&subdirsstr, 0), iter_to_restore);
-    printf("t1: %s, t2: %s\n", ctime(&start_time), ctime(&current_time));
-    printf("r1: %lu, r2: %lu\n", start_time, current_time);
-    printf("diff: %f\n", difftime(start_time, current_time));
-    return 0;
-}
-
-*/
