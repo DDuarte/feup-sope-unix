@@ -3,27 +3,33 @@
 
 #include <stdio.h>
 
-typedef enum 
-{  
-    STATE_ADDED = '+',
-    STATE_MODIFIED = '/',
-    STATE_REMOVED = '-',
-    STATE_INALTERED = '.'
-} fileState;
+/**
+ *  Possible backup file states
+ */
+typedef enum
+{
+    STATE_ADDED = '+', ///< New file
+    STATE_MODIFIED = '/', ///< File was changed
+    STATE_REMOVED = '-', ///< File was removed
+    STATE_INALTERED = '.' ///< File did not change
+} file_state;
 
+/**
+ * Represents a backuped file
+ */
 typedef struct
 {
-    char* fileName;
-    fileState state;
-    int iter;
+    char* file_name; ///< File name
+    file_state state; ///< File state
+    int iter; ///< Step of the last change to this file
 } file_info;
 
 /**
  * file_info_new Initializes a new file_info struct
  * @param  fi file_info pointer to be initialized. Must not be NULL
- * @param  fileName file name
+ * @param  file_name file name
  */
-void file_info_new(file_info* fi, const char* fileName);
+void file_info_new(file_info* fi, const char* file_name);
 
 /**
  * file_info_copy Copies the file_info struct from source to dest
@@ -41,9 +47,9 @@ void file_info_free(file_info* fi);
 /**
  * file_info_set_name Sets the file_info file name
  * @param fi       fi file_info pointer to be initialized. Must not be NULL
- * @param fileName file name
+ * @param file_name file name
  */
-void file_info_set_name(file_info* fi, const char* fileName);
+void file_info_set_name(file_info* fi, const char* file_name);
 
 /**
  * file_info_to_string prints the specified file_info_struct to the specified string in the "<state char> <iteration> <file name>" format

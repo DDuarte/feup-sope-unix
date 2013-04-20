@@ -7,10 +7,13 @@
 #include "vector.h"
 #include "fileinfo.h"
 
+/**
+ * Holds information of a certain backup (iteration, lits of files)
+ */
 typedef struct
 {
-    int iter; // step
-    vector file_list; // vector<file_info>
+    int iter; ///< step
+    vector file_list; ///< vector<file_info>
 } backup_info;
 
 /**
@@ -28,7 +31,6 @@ void backup_info_free(backup_info* bi);
 /**
  * Reads the specified iteration backup on the specified directory and saves it in result
  * @param  source File stream where backup_info data is store
- * @param  iter   Iteration
  * @param  result backup_info pointer to save the read data. Must not be NULL
  * @return        0 upon success, different otherwise.
  */

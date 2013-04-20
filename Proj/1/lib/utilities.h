@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 #ifndef DEBUG
-#  define DEBUG 1
+#  define DEBUG 0
 #endif
 
 #if DEBUG
@@ -39,7 +39,7 @@ void iter_to_folder(int iter, const char* dst, time_t startTime, int dt, char** 
  * @param  fileName File name of the file to copy
  * @return          true if successful, false otherwise
  */
-bool copy_file(const char* src_dir, const char* dst_dir, const char* fileName);
+bool copy_file(const char* src_dir, const char* dst_dir, const char* file_name);
 
 /**
  * Performs a file copy inside a fork'ed process
@@ -47,6 +47,6 @@ bool copy_file(const char* src_dir, const char* dst_dir, const char* fileName);
  * @param  dst_dir  Destination directory name
  * @param  fileName File name of the file to copy
  */
-void fork_copy_file(const char* src_dir, const char* dst_dir, const char* fileName);
+void fork_copy_file(const char* src_dir, const char* dst_dir, const char* file_name);
 
 #endif

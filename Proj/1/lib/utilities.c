@@ -11,9 +11,9 @@
 
 #define BUFFER_SIZE 1024
 
-void iter_to_folder(int iter, const char* dst, time_t startTime, int dt, char** name)
+void iter_to_folder(int iter, const char* dst, time_t start_time, int dt, char** name)
 {
-    time_t ti = startTime + iter * dt;
+    time_t ti = start_time + iter * dt;
     struct tm* timestruct = localtime(&ti);
     char buff[80];
     strftime(buff, 80, BACKUP_FOLDER_NAME_FORMAT, timestruct);
@@ -25,33 +25,33 @@ void iter_to_folder(int iter, const char* dst, time_t startTime, int dt, char** 
     (*name)[size] = '\0';
 }
 
-void fork_copy_file(const char* src_dir, const char* dst_dir, const char* fileName)
+void fork_copy_file(const char* src_dir, const char* dst_dir, const char* file_name)
 {
     pid_t pid = fork();
 
     if (pid == 0)
     {
-        copy_file(src_dir, dst_dir, fileName);
+        copy_file(src_dir, dst_dir, file_name);
         exit(0);
     }
 }
 
-bool copy_file(const char* src_dir, const char* dst_dir, const char* fileName)
+bool copy_file(const char* src_dir, const char* dst_dir, const char* file_name)
 {
     int destfd = -1;
-    bool returnCode = true;
+    bool return_code = true;
 
-    char srcFileName[1024];
-    sprintf(srcFileName, "%s/%s", src_dir, fileName);
+    char src_file_name[1024];
+    sprintf(src_file_name, "%s/%s", src_dir, file_name);
 
-    char dstFileName[1024];
-    sprintf(dstFileName, "%s/%s", dst_dir, fileName);
+    char dst_file_name[1024];
+    sprintf(dst_file_name, "%s/%s", dst_dir, file_name);
 
-    int sourcefd = open(srcFileName, O_RDONLY);
+    int sourcefd = open(src_file_name, O_RDONLY);
     if (sourcefd < 0)
     {
         perror("Error opening source file");
-        returnCode = false;
+        return_code = false;
         goto ret;
     }
 
@@ -60,15 +60,15 @@ bool copy_file(const char* src_dir, const char* dst_dir, const char* fileName)
     if (res != 0)
     {
         perror("Error reading source file permissions");
-        returnCode = false;
+        return_code = false;
         goto ret;
     }
 
-    destfd = open(dstFileName, O_CREAT | O_EXCL | O_WRONLY, buf.st_mode);
+    destfd = open(dst_file_name, O_CREAT | O_EXCL | O_WRONLY, buf.st_mode);
     if (destfd == -1)
     {
         perror("Error opening destination file");
-        returnCode = false;
+        return_code = false;
         goto ret;
     }
 
@@ -80,5 +80,5 @@ ret:
     if (sourcefd != -1) close(sourcefd);
     if (destfd != -1) close(destfd);
 
-    return returnCode;
+    return return_code;
 }

@@ -56,14 +56,14 @@ int backup_info_write(FILE* dest, const backup_info* backup)
     assert(dest);
     assert(backup);
 
-    char fileInfoBuffer[1000] = "";
+    char file_info_buffer[1000];
 
     fprintf(dest, "%d\n", backup->iter);
 
     for (int i = 0; i < vector_size(&backup->file_list); ++i)
     {
-        file_info_to_string((file_info*)vector_get(&backup->file_list, i), fileInfoBuffer);
-        fprintf(dest, "%s\n", fileInfoBuffer);
+        file_info_to_string((file_info*)vector_get(&backup->file_list, i), file_info_buffer);
+        fprintf(dest, "%s\n", file_info_buffer);
     }
 
     return 0;
@@ -74,7 +74,7 @@ void backup_info_add_file(backup_info* bi, file_info* fi)
     assert(bi);
     assert(fi);
 
-    file_info* fiToBeAdded = NULL;
-    file_info_copy(fi, &fiToBeAdded);
-    vector_push_back(&bi->file_list, fiToBeAdded);
+    file_info* fi_to_be_added = NULL;
+    file_info_copy(fi, &fi_to_be_added);
+    vector_push_back(&bi->file_list, fi_to_be_added);
 }

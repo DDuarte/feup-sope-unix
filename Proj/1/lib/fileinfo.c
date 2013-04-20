@@ -5,13 +5,13 @@
 
 #include "fileinfo.h"
 
-void file_info_new(file_info* fi, const char* fileName)
+void file_info_new(file_info* fi, const char* file_name)
 {
     assert(fi);
-    fi->fileName = NULL;
+    fi->file_name = NULL;
 
-    if (fileName)
-        file_info_set_name(fi, fileName);
+    if (file_name)
+        file_info_set_name(fi, file_name);
 
     fi->state = STATE_INALTERED;
     fi->iter = -1;
@@ -21,31 +21,31 @@ void file_info_free(file_info* fi)
 {
     assert(fi);
 
-    if (fi->fileName)
+    if (fi->file_name)
     {
-        free(fi->fileName);
-        fi->fileName = NULL;
+        free(fi->file_name);
+        fi->file_name = NULL;
     }
 }
 
-void file_info_set_name(file_info* fi, const char* fileName)
+void file_info_set_name(file_info* fi, const char* file_name)
 {
     assert(fi);
-    assert(fileName);
+    assert(file_name);
 
-    int newSize = strlen(fileName);
+    int newSize = strlen(file_name);
 
-    if (fi->fileName)
+    if (fi->file_name)
     {
-        int prevSize = strlen(fi->fileName);
+        int prevSize = strlen(fi->file_name);
 
         if (newSize > prevSize)
-            fi->fileName = (char*) realloc(fi->fileName, newSize);
+            fi->file_name = (char*) realloc(fi->file_name, newSize);
     }
     else
-        fi->fileName = (char*) malloc(newSize);
+        fi->file_name = (char*) malloc(newSize);
 
-    strcpy(fi->fileName, fileName);
+    strcpy(fi->file_name, file_name);
 }
 
 void file_info_to_string(file_info* fi, char* dest)
@@ -53,7 +53,7 @@ void file_info_to_string(file_info* fi, char* dest)
     assert(fi);
     assert(dest);
 
-    sprintf(dest, "%c %d %s", (char)fi->state, fi->iter, fi->fileName);
+    sprintf(dest, "%c %d %s", (char)fi->state, fi->iter, fi->file_name);
 }
 
 int file_info_read(FILE* source, file_info* result)
@@ -63,23 +63,23 @@ int file_info_read(FILE* source, file_info* result)
 
     char st;
     int iter;
-    char nameBuffer[1000];
+    char name_buffer[1000];
 
     if (fscanf(source, "%c %d ", &st, &iter) == EOF)
         return EOF;
 
-    fgets(nameBuffer, 1000, source);
+    fgets(name_buffer, 1000, source);
 
     if (feof(source))
         return EOF;
 
-    int size = strlen(nameBuffer);
-    if (nameBuffer[size-1] == '\n')
-        nameBuffer[size-1] = '\0';
+    int size = strlen(name_buffer);
+    if (name_buffer[size-1] == '\n')
+        name_buffer[size-1] = '\0';
 
     result->state = st;
     result->iter = iter;
-    file_info_set_name(result, nameBuffer);
+    file_info_set_name(result, name_buffer);
 
     return 0;
 }
@@ -89,7 +89,7 @@ void file_info_copy(const file_info* source, file_info** dest)
     if (!*dest)
         *dest = (file_info*) malloc(sizeof(file_info));
 
-    file_info_new(*dest, source ? source->fileName : NULL);
+    file_info_new(*dest, source ? source->file_name : NULL);
 
     if (source)
     {
