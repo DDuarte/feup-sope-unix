@@ -32,12 +32,18 @@
 void print_usage(bool err);
 
 /**
+ * Function used in scandir to select our backup subdirectories
+ * @param  file Dirent
+ * @return      Returns 1 if valid dirent, 0 otherwise
+ */
+int folder_selection(const struct dirent* file);
+/**
 * Entry point to this program
 * @param  argc Number of arguments
 * @param  argv Array of arguments
 * @return Program exit status code
 */
-int main(int argc, char const *argv[])
+int main(int argc, char const* argv[])
 {
     // Print usage if we receive -h or --help
     if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0))
@@ -66,22 +72,15 @@ int main(int argc, char const *argv[])
     vector subdirsstr;
     vector_new(&subdirsstr);
 
-    struct dirent* srcdirent;
-    while ((srcdirent = readdir(srcdir)) != NULL)
+    struct dirent** dirs = NULL;
+    int size = scandir(srcdirstr, &dirs, folder_selection, alphasort);
+
+    for (int i = 0; i < size; ++i)
     {
-        if (srcdirent->d_type != DT_DIR)
-            continue;
-
-        if (strcmp(srcdirent->d_name, ".") == 0 || strcmp(srcdirent->d_name, "..") == 0)
-            continue;
-
-        char* name = malloc((strlen(srcdirent->d_name) + 1) * sizeof(char));
-        strcpy(name, srcdirent->d_name);
+        char* name = malloc(strlen(dirs[i]->d_name) + 1);
+        strcpy(name, dirs[i]->d_name);
         vector_push_back(&subdirsstr, name);
     }
-
-    closedir(srcdir);
-    srcdir = NULL;
 
     if (vector_size(&subdirsstr) == 0)
     {
@@ -139,7 +138,8 @@ int main(int argc, char const *argv[])
         if (iter_to_restore == NULL)
             printf("Could not find the intended restore point. Try again.\n");
 
-    } while (iter_to_restore == NULL);
+    }
+    while (iter_to_restore == NULL);
 
     if (destdir == NULL)
     {
@@ -197,14 +197,15 @@ int main(int argc, char const *argv[])
     strptime((const char*)vector_get(&subdirsstr, 0), BACKUP_FOLDER_NAME_FORMAT, &tp);
     time_t start_time = mktime(&tp);
 
-    strptime(iter_to_restore, BACKUP_FOLDER_NAME_FORMAT, &tp);
-    time_t current_time = mktime(&tp);
+    struct tm tp1;
+    strptime(iter_to_restore, BACKUP_FOLDER_NAME_FORMAT, &tp1);
+    time_t current_time = mktime(&tp1);
 
     int dt;
     if (backup_to_restore.iter == 0)
         dt = 0;
     else
-        dt = (current_time - start_time) / backup_to_restore.iter;
+        dt = (difftime(current_time, start_time)) / backup_to_restore.iter;
 
     for (int i = 0; i < vector_size(&backup_to_restore.file_list); ++i)
     {
@@ -236,6 +237,11 @@ void print_usage(bool err)
     fprintf(err ? stderr : stdout, "Usage: rstr <srcdir> <destdir>\n"
                                    "  srcdir  - directory that was used to backup;\n"
                                    "  destdir - destination of the restore.\n");
+}
+
+int folder_selection(const struct dirent* file)
+{
+    return file->d_type == DT_DIR && strlen(file->d_name) == 19;
 }
 
 /**@}*/
