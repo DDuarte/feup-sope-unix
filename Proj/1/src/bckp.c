@@ -77,7 +77,7 @@ bool backup(const char* src, const char* dst, backup_info* prev, backup_info* cu
 * @param  argv Array of arguments
 * @return Program exit status code
 */
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
     // Print usage if we receive -h or --help
     if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0))
@@ -91,9 +91,17 @@ int main(int argc, const char* argv[])
         return EXIT_FAILURE;
     }
 
-    const char* srcdirstr = argv[1];
-    const char* destdirstr = argv[2];
+    char* srcdirstr = argv[1];
+    char* destdirstr = argv[2];
     const char* dtstr = argv[3];
+
+    int srcdirstrLen = strlen(srcdirstr);
+    if (srcdirstr[srcdirstrLen - 1] == '/')
+        srcdirstr[srcdirstrLen - 1] = '\0';
+
+    int destdirstrLen = strlen(destdirstr);
+    if (destdirstr[destdirstrLen - 1] == '/')
+        destdirstr[destdirstrLen - 1] = '\0';
 
     int dt = atoi(dtstr); // atoi returns 0 if conversion is not successful
     if (dt == 0)
@@ -246,22 +254,18 @@ int main(int argc, const char* argv[])
                     if (newFile == NULL)
                     {
                         perror("New backup file");
-                        free(new_file_path_name);
                         exit(1);
                     }
 
                     backup_info_write(newFile, &current);
                     fclose(newFile);
 
-
                     for (int i = 0; i < vector_size(&current.file_list); ++i)
                     {
                         file_info* fi = vector_get(&current.file_list, i);
                         if (fi->state == STATE_ADDED || fi->state == STATE_MODIFIED)
-                            fork_copy_file(srcdirstr, new_file_path_name, fi->file_name);
+                            fork_copy_file(srcdirstr, new_folder_path_name, fi->file_name);
                     }
-
-                    free(new_file_path_name);
                 }
 
             }

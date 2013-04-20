@@ -33,17 +33,17 @@ void file_info_set_name(file_info* fi, const char* file_name)
     assert(fi);
     assert(file_name);
 
-    int newSize = strlen(file_name);
+    int newSize = strlen(file_name) + 1;
 
     if (fi->file_name)
     {
         int prevSize = strlen(fi->file_name);
 
         if (newSize > prevSize)
-            fi->file_name = (char*) realloc(fi->file_name, newSize);
+            fi->file_name = (char*) realloc(fi->file_name, newSize * sizeof(char));
     }
     else
-        fi->file_name = (char*) malloc(newSize);
+        fi->file_name = (char*) malloc(newSize * sizeof(char));
 
     strcpy(fi->file_name, file_name);
 }
