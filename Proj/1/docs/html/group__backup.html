@@ -118,8 +118,8 @@ Functions</h2></td></tr>
 <tr class="memdesc:ga0949419e1b96c735e1bafe34db1b74be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints information on how to use this program.  <a href="#ga0949419e1b96c735e1bafe34db1b74be"></a><br/></td></tr>
 <tr class="memitem:ga29c59ce7f18999128c2fc584aa64cc2b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__backup.html#ga29c59ce7f18999128c2fc584aa64cc2b">sigusr1_handler</a> (int signo)</td></tr>
 <tr class="memdesc:ga29c59ce7f18999128c2fc584aa64cc2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handles SIGUSR1 signal, used when we want to halt the backup process.  <a href="#ga29c59ce7f18999128c2fc584aa64cc2b"></a><br/></td></tr>
-<tr class="memitem:gad72eb5ad7746e1bed5481a7c70d8d7e4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__backup.html#gad72eb5ad7746e1bed5481a7c70d8d7e4">sigchil_handler</a> (int signo)</td></tr>
-<tr class="memdesc:gad72eb5ad7746e1bed5481a7c70d8d7e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handles SIGCHLD signal.  <a href="#gad72eb5ad7746e1bed5481a7c70d8d7e4"></a><br/></td></tr>
+<tr class="memitem:gaf60aa44f7a64179d22c568071f0e8d75"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__backup.html#gaf60aa44f7a64179d22c568071f0e8d75">sigchild_handler</a> (int signo)</td></tr>
+<tr class="memdesc:gaf60aa44f7a64179d22c568071f0e8d75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handles SIGCHLD signal.  <a href="#gaf60aa44f7a64179d22c568071f0e8d75"></a><br/></td></tr>
 <tr class="memitem:ga09c29a477b87aa26d08abebe27e13b33"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__backup.html#ga09c29a477b87aa26d08abebe27e13b33">backup</a> (const char *src, const char *dst, <a class="el" href="structbackup__info.html">backup_info</a> *prev, <a class="el" href="structbackup__info.html">backup_info</a> *curr, time_t init_time, int dt)</td></tr>
 <tr class="memdesc:ga09c29a477b87aa26d08abebe27e13b33"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function used to create backups, comparing two backup_infos.  <a href="#ga09c29a477b87aa26d08abebe27e13b33"></a><br/></td></tr>
 <tr class="memitem:ga0ddf1224851353fc92bfbff6f499fa97"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__backup.html#ga0ddf1224851353fc92bfbff6f499fa97">main</a> (int argc, char *argv[])</td></tr>
@@ -197,7 +197,7 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if successful, false otherwise </dd></dl>
 
-<p>Definition at line <a class="el" href="bckp_8c_source.html#l00343">343</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
+<p>Definition at line <a class="el" href="bckp_8c_source.html#l00352">352</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
 <div class="fragment"><div class="line">{</div>
 <div class="line">    <span class="keywordtype">bool</span> altered = <span class="keyword">false</span>;</div>
 <div class="line"></div>
@@ -333,7 +333,7 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns 1 if dirent is a directory, 0 otherwise </dd></dl>
 
-<p>Definition at line <a class="el" href="bckp_8c_source.html#l00459">459</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
+<p>Definition at line <a class="el" href="bckp_8c_source.html#l00468">468</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
 <div class="fragment"><div class="line">{</div>
 <div class="line">    <span class="keywordflow">return</span> file-&gt;d_type == DT_DIR;</div>
 <div class="line">}</div>
@@ -374,7 +374,7 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Modification time </dd></dl>
 
-<p>Definition at line <a class="el" href="bckp_8c_source.html#l00464">464</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
+<p>Definition at line <a class="el" href="bckp_8c_source.html#l00473">473</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
 <div class="fragment"><div class="line">{</div>
 <div class="line">    <span class="keywordtype">char</span> f_path[1024];</div>
 <div class="line">    snprintf(f_path, 1024, <span class="stringliteral">&quot;%s/%s&quot;</span>, dir, file_name);</div>
@@ -467,7 +467,27 @@ Variables</h2></td></tr>
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
 <div class="line"></div>
-<div class="line">    signal(SIGUSR1, <a class="code" href="group__backup.html#ga29c59ce7f18999128c2fc584aa64cc2b" title="Handles SIGUSR1 signal, used when we want to halt the backup process.">sigusr1_handler</a>);</div>
+<div class="line">    sigset_t newSigset, oldSigset;</div>
+<div class="line"></div>
+<div class="line">    sigemptyset(&amp;newSigset);</div>
+<div class="line">    sigaddset(&amp;newSigset, SIGINT);</div>
+<div class="line">    sigaddset(&amp;newSigset, SIGTERM);</div>
+<div class="line">    sigaddset(&amp;newSigset, SIGTSTP);</div>
+<div class="line"></div>
+<div class="line">    <span class="keywordflow">if</span> (sigprocmask(SIG_BLOCK, &amp;newSigset, &amp;oldSigset) &lt; 0)</div>
+<div class="line">        fprintf(stderr, <span class="stringliteral">&quot;sigprocmask: failed setting mask. Continuing anyway.\n&quot;</span>);</div>
+<div class="line"></div>
+<div class="line">    <span class="keyword">struct </span>sigaction sigusr1_NewSigaction, sigusr1_OldSigaction;</div>
+<div class="line"></div>
+<div class="line">    sigusr1_NewSigaction.sa_handler = <a class="code" href="group__backup.html#ga29c59ce7f18999128c2fc584aa64cc2b" title="Handles SIGUSR1 signal, used when we want to halt the backup process.">sigusr1_handler</a>;</div>
+<div class="line"></div>
+<div class="line">    sigaction(SIGUSR1, &amp;sigusr1_NewSigaction, &amp;sigusr1_OldSigaction);</div>
+<div class="line"></div>
+<div class="line">    <span class="keyword">struct </span>sigaction sigchild_NewSigaction, sigchild_OldSigaction;</div>
+<div class="line"></div>
+<div class="line">    sigchild_NewSigaction.sa_handler = <a class="code" href="group__backup.html#gaf60aa44f7a64179d22c568071f0e8d75" title="Handles SIGCHLD signal.">sigchild_handler</a>;</div>
+<div class="line"></div>
+<div class="line">    sigaction(SIGCHLD, &amp;sigchild_NewSigaction, &amp;sigchild_OldSigaction);</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordtype">int</span> iteration = -1;</div>
 <div class="line">    <a class="code" href="group__backup.html#gaf1ba9b15db397b24d17bfc854e6b280f" title="Backup initial time.">InitIterTime</a> = time(NULL);</div>
@@ -621,22 +641,27 @@ Variables</h2></td></tr>
 <div class="line"></div>
 <div class="line">            <span class="keywordtype">int</span> sleep_time = dt;</div>
 <div class="line">            <span class="keywordflow">while</span> (<a class="code" href="group__backup.html#gab4c8cb30a15fb6acc4424b218d62ae39" title="Boolean to know if backup is running or not.">Executing</a> &amp;&amp; sleep_time != 0)</div>
+<div class="line">            {</div>
 <div class="line">                sleep_time = sleep(sleep_time);</div>
 <div class="line"></div>
-<div class="line">            <span class="keywordtype">int</span> status_child;</div>
-<div class="line">            pid_t pid_child = waitpid(-1, &amp;status_child, WNOHANG);</div>
+<div class="line">                <span class="keywordtype">int</span> status_child;</div>
+<div class="line">                pid_t pid_child = waitpid(-1, &amp;status_child, WNOHANG);</div>
 <div class="line"></div>
-<div class="line">            <span class="keywordflow">if</span> (pid_child == (pid_t) - 1)</div>
-<div class="line">            {</div>
-<div class="line">                fprintf(stderr, <span class="stringliteral">&quot;waitpid failed (%s)\n&quot;</span>, strerror(errno));</div>
-<div class="line">                <span class="keywordflow">return</span> EXIT_FAILURE;</div>
-<div class="line">            }</div>
-<div class="line">            <span class="keywordflow">else</span> <span class="keywordflow">if</span> (pid_child &gt; (pid_t) 0)</div>
-<div class="line">            {</div>
-<div class="line">                <span class="keywordflow">if</span> (WEXITSTATUS(status_child) != 0)</div>
+<div class="line">                <span class="keywordflow">if</span> (pid_child == (pid_t) - 1)</div>
 <div class="line">                {</div>
-<div class="line">                    fprintf(stderr, <span class="stringliteral">&quot;Child failed with exit code %d\n&quot;</span>, WEXITSTATUS(status_child));</div>
-<div class="line">                    <span class="keywordflow">return</span> EXIT_FAILURE;</div>
+<div class="line">                    <span class="keywordflow">if</span> (errno != ECHILD)</div>
+<div class="line">                    {</div>
+<div class="line">                        fprintf(stderr, <span class="stringliteral">&quot;waitpid failed (%s)\n&quot;</span>, strerror(errno));</div>
+<div class="line">                        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
+<div class="line">                    }</div>
+<div class="line">                }</div>
+<div class="line">                <span class="keywordflow">else</span> <span class="keywordflow">if</span> (pid_child &gt; (pid_t) 0)</div>
+<div class="line">                {</div>
+<div class="line">                    <span class="keywordflow">if</span> (WEXITSTATUS(status_child) != 0)</div>
+<div class="line">                    {</div>
+<div class="line">                        fprintf(stderr, <span class="stringliteral">&quot;Child failed with exit code %d\n&quot;</span>, WEXITSTATUS(status_child));</div>
+<div class="line">                        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
+<div class="line">                    }</div>
 <div class="line">                }</div>
 <div class="line">            }</div>
 <div class="line">            iteration++;</div>
@@ -670,7 +695,7 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="bckp_8c_source.html#l00310">310</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
+<p>Definition at line <a class="el" href="bckp_8c_source.html#l00335">335</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
 <div class="fragment"><div class="line">{</div>
 <div class="line">    fprintf(err ? stderr : stdout, <span class="stringliteral">&quot;Usage: bckp &lt;srcdir&gt; &lt;destdir&gt; &lt;dt&gt; &amp;\n&quot;</span></div>
 <div class="line">            <span class="stringliteral">&quot;  srcdir  - directory to backup;\n&quot;</span></div>
@@ -703,19 +728,19 @@ Variables</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns 1 if dirent is a regular file, 0 otherwise </dd></dl>
 
-<p>Definition at line <a class="el" href="bckp_8c_source.html#l00454">454</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
+<p>Definition at line <a class="el" href="bckp_8c_source.html#l00463">463</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
 <div class="fragment"><div class="line">{</div>
 <div class="line">    <span class="keywordflow">return</span> file-&gt;d_type == DT_REG;</div>
 <div class="line">}</div>
 </div><!-- fragment -->
 </div>
 </div>
-<a class="anchor" id="gad72eb5ad7746e1bed5481a7c70d8d7e4"></a>
+<a class="anchor" id="gaf60aa44f7a64179d22c568071f0e8d75"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void sigchil_handler </td>
+          <td class="memname">void sigchild_handler </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>signo</em></td><td>)</td>
@@ -732,24 +757,8 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="bckp_8c_source.html#l00323">323</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
+<p>Definition at line <a class="el" href="bckp_8c_source.html#l00348">348</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
 <div class="fragment"><div class="line">{</div>
-<div class="line">    <span class="keywordtype">int</span> status_child;</div>
-<div class="line">    pid_t pid_child = waitpid(-1, &amp;status_child, WNOHANG); <span class="comment">// may or may not wait for child</span></div>
-<div class="line"></div>
-<div class="line">    <span class="keywordflow">if</span> (pid_child == (pid_t) - 1)</div>
-<div class="line">    {</div>
-<div class="line">        fprintf(stderr, <span class="stringliteral">&quot;Could not wait for child process in sigchild_handler (%s)\n&quot;</span>, strerror(errno));</div>
-<div class="line">        <a class="code" href="group__backup.html#gab4c8cb30a15fb6acc4424b218d62ae39" title="Boolean to know if backup is running or not.">Executing</a> = <span class="keyword">false</span>;</div>
-<div class="line">    }</div>
-<div class="line">    <span class="keywordflow">else</span> <span class="keywordflow">if</span> (pid_child &gt; (pid_t) 0)</div>
-<div class="line">    {</div>
-<div class="line">        <span class="keywordflow">if</span> (WEXITSTATUS(status_child) != 0)</div>
-<div class="line">        {</div>
-<div class="line">            fprintf(stderr, <span class="stringliteral">&quot;Child process (pid = %d) failed with exit code %d\n&quot;</span>, pid_child, WEXITSTATUS(status_child));</div>
-<div class="line">            <a class="code" href="group__backup.html#gab4c8cb30a15fb6acc4424b218d62ae39" title="Boolean to know if backup is running or not.">Executing</a> = <span class="keyword">false</span>;</div>
-<div class="line">        }</div>
-<div class="line">    }</div>
 <div class="line">}</div>
 </div><!-- fragment -->
 </div>
@@ -776,7 +785,7 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="bckp_8c_source.html#l00318">318</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
+<p>Definition at line <a class="el" href="bckp_8c_source.html#l00343">343</a> of file <a class="el" href="bckp_8c_source.html">bckp.c</a>.</p>
 <div class="fragment"><div class="line">{</div>
 <div class="line">    <a class="code" href="group__backup.html#gab4c8cb30a15fb6acc4424b218d62ae39" title="Boolean to know if backup is running or not.">Executing</a> = <span class="keyword">false</span>;</div>
 <div class="line">}</div>
@@ -837,7 +846,7 @@ Variables</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sat Apr 20 2013 20:57:03 for SOPE - Project 1 - Backup by
+    <li class="footer">Generated on Sun Apr 21 2013 21:49:06 for SOPE - Project 1 - Backup by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.1.2 </li>
   </ul>
