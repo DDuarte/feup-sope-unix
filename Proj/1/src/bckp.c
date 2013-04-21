@@ -62,7 +62,7 @@ void sigusr1_handler(int signo);
  * Handles SIGCHLD signal
  * @param signo Signal number
  */
-void sigchil_handler(int signo);
+void sigchild_handler(int signo);
 
 /**
  * Function used to create backups, comparing two backup_infos
@@ -128,7 +128,27 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    signal(SIGUSR1, sigusr1_handler);
+    sigset_t newSigset, oldSigset;
+
+    sigemptyset(&newSigset);
+    sigaddset(&newSigset, SIGINT);
+    sigaddset(&newSigset, SIGTERM);
+    sigaddset(&newSigset, SIGTSTP);
+
+    if (sigprocmask(SIG_BLOCK, &newSigset, &oldSigset) < 0)
+        fprintf(stderr, "sigprocmask: failed setting mask. Continuing anyway.\n");
+
+    struct sigaction sigusr1_NewSigaction, sigusr1_OldSigaction;
+
+    sigusr1_NewSigaction.sa_handler = sigusr1_handler;
+
+    sigaction(SIGUSR1, &sigusr1_NewSigaction, &sigusr1_OldSigaction);
+
+    struct sigaction sigchild_NewSigaction, sigchild_OldSigaction;
+
+    sigchild_NewSigaction.sa_handler = sigchild_handler;
+
+    sigaction(SIGCHLD, &sigchild_NewSigaction, &sigchild_OldSigaction);
 
     int iteration = -1;
     InitIterTime = time(NULL);
@@ -282,22 +302,27 @@ int main(int argc, char* argv[])
 
             int sleep_time = dt;
             while (Executing && sleep_time != 0)
+            {
                 sleep_time = sleep(sleep_time);
 
-            int status_child;
-            pid_t pid_child = waitpid(-1, &status_child, WNOHANG);
+                int status_child;
+                pid_t pid_child = waitpid(-1, &status_child, WNOHANG);
 
-            if (pid_child == (pid_t) - 1)
-            {
-                fprintf(stderr, "waitpid failed (%s)\n", strerror(errno));
-                return EXIT_FAILURE;
-            }
-            else if (pid_child > (pid_t) 0)
-            {
-                if (WEXITSTATUS(status_child) != 0)
+                if (pid_child == (pid_t) - 1)
                 {
-                    fprintf(stderr, "Child failed with exit code %d\n", WEXITSTATUS(status_child));
-                    return EXIT_FAILURE;
+                    if (errno != ECHILD)
+                    {
+                        fprintf(stderr, "waitpid failed (%s)\n", strerror(errno));
+                        return EXIT_FAILURE;
+                    }
+                }
+                else if (pid_child > (pid_t) 0)
+                {
+                    if (WEXITSTATUS(status_child) != 0)
+                    {
+                        fprintf(stderr, "Child failed with exit code %d\n", WEXITSTATUS(status_child));
+                        return EXIT_FAILURE;
+                    }
                 }
             }
             iteration++;
@@ -320,24 +345,8 @@ void sigusr1_handler(int signo)
     Executing = false;
 }
 
-void sigchil_handler(int signo)
+void sigchild_handler(int signo)
 {
-    int status_child;
-    pid_t pid_child = waitpid(-1, &status_child, WNOHANG); // may or may not wait for child
-
-    if (pid_child == (pid_t) - 1)
-    {
-        fprintf(stderr, "Could not wait for child process in sigchild_handler (%s)\n", strerror(errno));
-        Executing = false;
-    }
-    else if (pid_child > (pid_t) 0)
-    {
-        if (WEXITSTATUS(status_child) != 0)
-        {
-            fprintf(stderr, "Child process (pid = %d) failed with exit code %d\n", pid_child, WEXITSTATUS(status_child));
-            Executing = false;
-        }
-    }
 }
 
 bool backup(const char* src, const char* dst, backup_info* prev, backup_info* curr, time_t init_time, int dt)
