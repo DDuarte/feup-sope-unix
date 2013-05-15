@@ -7,8 +7,8 @@
 void player_init(player* p)
 {
     assert(p);
-    p->name = NULL;
-    p->fifoName = NULL;
+    p->name[0] = '\0';
+    p->fifoName[0] = '\0';
     p->number = -1;
 }
 
@@ -19,60 +19,15 @@ player player_new()
     return result;
 }
 
-void player_set_name(player* p, const char* newName)
+void player_set_name(player* p, const char newName[STRING_MAX_LENGTH])
 {
     assert(p);
 
-    if (newName)
-    {
-        int newNameSize = strlen(newName);
-        if (!p->name)
-        {
-            p->name = malloc(newNameSize * sizeof(char));
-            strcpy(p->name, newName);
-        }
-        else
-        {
-            p->name = realloc(p->name, newNameSize * sizeof(char));
-            strcpy(p->name, newName);
-        }
-    }
-    else
-    {
-        if (p->name)
-        {
-            free(p->name);
-            p->name = NULL;
-        }
-    }
-
-
+    strncpy(p->name, newName, STRING_MAX_LENGTH);
 }
 
-void player_set_fifo_name(player* p, const char* newFifoName)
+void player_set_fifo_name(player* p, const char newFifoName[STRING_MAX_LENGTH])
 {
     assert(p);
-
-    if (newFifoName)
-    {
-        int newFifoNameSize = strlen(newFifoName);
-        if (!p->fifoName)
-        {
-            p->fifoName = malloc(newFifoNameSize * sizeof(char));
-            strcpy(p->fifoName, newFifoName);
-        }
-        else
-        {
-            p->fifoName = realloc(p->fifoName, newFifoNameSize * sizeof(char));
-            strcpy(p->fifoName, newFifoName);
-        }
-    }
-    else
-    {
-        if (p->fifoName)
-        {
-            free(p->fifoName);
-            p->fifoName = NULL;
-        }
-    }
+    strncpy(p->fifoName, newFifoName, STRING_MAX_LENGTH);
 }

@@ -54,18 +54,38 @@ int main(int argc, char** argv)
 
     table* t = join_table(&arguments);
 
+    if (!t)
+    {
+        return 1;
+    }
+
     printf("Table: %d\n\tNumberOfPlayers: %d\n", t->numMaxPlayers, t->numPlayers);
 
     for (int i = 0; i < t->numPlayers; ++i)
     {
-        player* p = table_get_player(t, i);
+        player* p = &(t->players[i]);
         printf("\tPlayer %d: \n\t\tName: %s\n\t\tFifoName: %s\n", p->number, p->name, p->fifoName);
     }
 
-    sleep(10);
+    pthread_mutex_lock(&t->StartGameMutex);
+
+    if (t->numPlayers == t->numMaxPlayers)
+        pthread_cond_broadcast(&t->StartGameCondVar);
+    else
+        pthread_cond_wait(&t->StartGameCondVar, &t->StartGameMutex);
+
+    pthread_mutex_unlock(&t->StartGameMutex);
+
+    pthread_mutex_lock(&t->NextPlayerMutex);
+    // Wait for turn
+    // 
+    pthread_mutex_unlock(&t->NextPlayerMutex);
 
     if (dealer)
+    {
+        munmap(t, sizeof(table) + sizeof(player) * arguments.numberOfPlayers);
         shm_unlink(arguments.shmName);
+    }
 
     printf("done\n");
 
@@ -185,18 +205,20 @@ table* join_table(const cmdArgs* args)
 
     if (shmfd < 0) /* Already exists. */
     {
+        printf("Table exists... Joining Table...\n");
         shmfd = shm_open(args->shmName, O_RDWR , 0775);
-        result = mmap(0, sizeof(table), PROT_READ|PROT_WRITE,MAP_SHARED, shmfd,0);
+        result = mmap(0, sizeof(table) + sizeof(player) * args->numberOfPlayers, PROT_READ|PROT_WRITE,MAP_SHARED, shmfd,0); 
     }
     else /* Just Created a table with this name */
     {
-        if (ftruncate(shmfd, sizeof(table)) == -1)
+        printf("Table doesn't exists... Creating Table...\n");
+
+        if (ftruncate(shmfd, sizeof(table) + sizeof(player) * args->numberOfPlayers) == -1)
         {
             shm_unlink(args->shmName);
             return NULL;
         }
-
-        result = mmap(0, sizeof(table), PROT_READ|PROT_WRITE,MAP_SHARED, shmfd,0);
+        result = mmap(0, sizeof(table) + sizeof(player) * args->numberOfPlayers, PROT_READ|PROT_WRITE,MAP_SHARED, shmfd,0); 
         *result = table_new(args->numberOfPlayers);
         dealer = true;
     }
@@ -204,12 +226,21 @@ table* join_table(const cmdArgs* args)
     printf("mmap: %p\n", result);
 
     int playerNum = result->numPlayers;
+
+    if (playerNum >= result->numMaxPlayers)
+    {
+        printf("Table is full.\n");
+        close(shmfd);
+        return NULL;
+    }
+
     result->numPlayers++;
 
     printf("Player Number: %d\n", playerNum);
+    printf("Max number of Players: %d\n", result->numMaxPlayers);
     printf("NumberOfPlayers: %d\n", result->numPlayers);
 
-    player* p = table_get_player(result, playerNum);
+    player* p = &(result->players[playerNum]);
 
     p->number = playerNum;
 
