@@ -25,7 +25,13 @@ void cmdArgs_set_name(cmdArgs* ca, const char* newName);
 void cmdArgs_set_shm_name(cmdArgs* ca, const char* newShmName);
 
 bool parse_arguments(cmdArgs* dest, int argc, char** argv);
-void print_usage();
+
+/**
+ * Prints information on how to use this program
+ * @param err if true, info will be printed to stderr; otherwise stdout
+ */
+void print_usage(bool err);
+
 table* join_table(const cmdArgs* args);
 
 bool dealer = false;
@@ -33,10 +39,15 @@ bool dealer = false;
 int main(int argc, char** argv)
 {
     cmdArgs arguments = cmdArgs_new();
-    if (!parse_arguments(&arguments, argc, argv))
+    if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0))
     {
-        print_usage();
-        return 1;
+        print_usage(false);
+        return EXIT_SUCCESS;
+    }
+    else if (!parse_arguments(&arguments, argc, argv))
+    {
+        print_usage(true);
+        return EXIT_FAILURE;
     }
 
     printf("Player: %s\nTable: %s\nNumberOfPlayers: %d\n", arguments.playerName, arguments.shmName, arguments.numberOfPlayers);
@@ -159,9 +170,12 @@ bool parse_arguments(cmdArgs* dest, int argc, char** argv)
     return true;
 }
 
-void print_usage()
+void print_usage(bool err)
 {
-    printf("tpc <player_name> <table_name> <numOfPlayers>\n");
+    fprintf(err ? stderr : stdout, "Usage: tpc <player_name> <table_name> <n_players>\n"
+            "  player_name  - your name;\n"
+            "  table_name - server's name;\n"
+            "  n_players - number of players\n");
 }
 
 table* join_table(const cmdArgs* args)
@@ -172,7 +186,7 @@ table* join_table(const cmdArgs* args)
     if (shmfd < 0) /* Already exists. */
     {
         shmfd = shm_open(args->shmName, O_RDWR , 0775);
-        result = mmap(0, sizeof(table), PROT_READ|PROT_WRITE,MAP_SHARED, shmfd,0); 
+        result = mmap(0, sizeof(table), PROT_READ|PROT_WRITE,MAP_SHARED, shmfd,0);
     }
     else /* Just Created a table with this name */
     {
@@ -182,7 +196,7 @@ table* join_table(const cmdArgs* args)
             return NULL;
         }
 
-        result = mmap(0, sizeof(table), PROT_READ|PROT_WRITE,MAP_SHARED, shmfd,0); 
+        result = mmap(0, sizeof(table), PROT_READ|PROT_WRITE,MAP_SHARED, shmfd,0);
         *result = table_new(args->numberOfPlayers);
         dealer = true;
     }
