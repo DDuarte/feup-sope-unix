@@ -1,36 +1,33 @@
 CC=clang
 
 CFLAGS= -Wall -std=gnu11 -g
-LDFLAGS=
+LDFLAGS= -lrt
 
 SRC_DIR= src
 BIN_DIR= bin
 TEMP_DIR= temp
 
-EXECUTABLE_SRC= $(notdir $(wildcard $(SRC_DIR)/*.c))
-SOURCES= $(notdir $(EXECUTABLE_SRC))
-EXECUTABLE=$(notdir $(basename $(SOURCES)))
-EXECUTABLE_OBJ=$(addprefix $(SRC_DIR)/, $(SOURCES:.c=.o))
+SRC_FILES_PATH= $(wildcard $(SRC_DIR)/*.c)
+SRC_FILES= $(notdir $(SRC_FILES_PATH))
+SRC_OBJ= $(addprefix $(BIN_DIR)/$(TEMP_DIR)/, $(SRC_FILES:.c=.o))
 
-LIB_DIR= lib
-LIB_SRC_FILES= $(notdir $(LIB_SRC))
-LIB_SRC= $(wildcard $(LIB_DIR)/*.c)
-LIB_OBJ= $(addprefix $(LIB_DIR)/, $(LIB_SRC_FILES:.c=.o))
-
-OBJS = $(addprefix $(BIN_DIR)/$(TEMP_DIR)/, $(LIB_SRC_FILES:.c=.o))
+EXECUTABLE= tpc
+EXECUTABLE_SRC= $(addsuffix .c, $(EXECUTABLE))
+EXECUTABLE_SRC_FILE_PATH= $(addprefix $(SRC_DIR)/, EXECUTABLE_SRC)
+EXECUTABLE_OBJ= $(addprefix $(BIN_DIR)/$(TEMP_DIR)/, $(EXECUTABLE_SRC:.c=.o))
 
 .PHONY: all
 
-all: dirs $(LIB_OBJ) $(EXECUTABLE_OBJ) $(EXECUTABLE)
+all: dirs $(EXECUTABLE)
 
 dirs:
 	mkdir -p $(BIN_DIR) $(BIN_DIR)/$(TEMP_DIR)
 
-$(EXECUTABLE): $(LIB_OBJ) $(EXECUTABLE_OBJ)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) $(BIN_DIR)/$(TEMP_DIR)/$@.o -o $(BIN_DIR)/$(basename $@)
+$(EXECUTABLE): $(SRC_OBJ)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(SRC_OBJ) -o $(BIN_DIR)/$(basename $@)
 
 %.o:
-	$(CC) $(CFLAGS) -c $(basename $@).c -o $(BIN_DIR)/$(TEMP_DIR)/$(notdir $(basename $@)).o -I./$(LIB_DIR)
+	$(CC) $(CFLAGS) -c $(SRC_DIR)/$(notdir $(basename $@)).c -o $(BIN_DIR)/$(TEMP_DIR)/$(notdir $(basename $@)).o
 
 clean:
 	rm -rf $(BIN_DIR)
