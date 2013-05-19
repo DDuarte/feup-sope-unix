@@ -10,6 +10,8 @@ typedef struct table_t
 {
     int numPlayers;
     int numMaxPlayers;
+    int turn;
+    int roundNum;
     pthread_cond_t StartGameCondVar;
     pthread_mutex_t StartGameMutex;
     pthread_cond_t NextPlayerCondVar;

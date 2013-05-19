@@ -16,6 +16,7 @@ typedef struct cmdArgs_t
 {
     char* playerName;
     char* shmName;
+    player* pl;
     unsigned int numberOfPlayers;
 } cmdArgs;
 
@@ -26,19 +27,42 @@ void cmdArgs_set_shm_name(cmdArgs* ca, const char* newShmName);
 
 bool parse_arguments(cmdArgs* dest, int argc, char** argv);
 
+void next_player(table* t);
+void wait_for_turn(table* t, player* p);
+void wait_for_game_start(table* t);
+
+void Play();
+void DealCards();
+
 /**
  * Prints information on how to use this program
  * @param err if true, info will be printed to stderr; otherwise stdout
  */
 void print_usage(bool err);
 
-table* join_table(const cmdArgs* args);
+table* join_table(cmdArgs* args);
 
 bool dealer = false;
+table* tbl = NULL;
+cmdArgs arguments;
+
+void exitHandler()
+{
+    if (dealer)
+    {
+        wait_for_turn(tbl, arguments.pl);
+
+        munmap(tbl, sizeof(table) + sizeof(player) * arguments.numberOfPlayers);
+        shm_unlink(arguments.shmName);
+    }
+}
 
 int main(int argc, char** argv)
 {
-    cmdArgs arguments = cmdArgs_new();
+    arguments = cmdArgs_new();
+
+    atexit(exitHandler);
+
     if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0))
     {
         print_usage(false);
@@ -50,44 +74,53 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    printf("Player: %s\nTable: %s\nNumberOfPlayers: %d\n", arguments.playerName, arguments.shmName, arguments.numberOfPlayers);
+    /*printf("Player: %s\nTable: %s\nNumberOfPlayers: %d\n", arguments.playerName, arguments.shmName, arguments.numberOfPlayers);*/
 
     table* t = join_table(&arguments);
+    tbl = t;
 
     if (!t)
     {
         return 1;
     }
 
-    printf("Table: %d\n\tNumberOfPlayers: %d\n", t->numMaxPlayers, t->numPlayers);
+    /*printf("Table: %d\n\tNumberOfPlayers: %d\n", t->numMaxPlayers, t->numPlayers);
 
     for (int i = 0; i < t->numPlayers; ++i)
     {
         player* p = &(t->players[i]);
         printf("\tPlayer %d: \n\t\tName: %s\n\t\tFifoName: %s\n", p->number, p->name, p->fifoName);
-    }
+    }*/
 
-    pthread_mutex_lock(&t->StartGameMutex);
+    wait_for_game_start(t);
+    
+    int numOfRounds = 52 / t->numPlayers;
 
-    if (t->numPlayers == t->numMaxPlayers)
-        pthread_cond_broadcast(&t->StartGameCondVar);
-    else
-        pthread_cond_wait(&t->StartGameCondVar, &t->StartGameMutex);
+    printf("NumberOfRounds: %d\n", numOfRounds);
 
-    pthread_mutex_unlock(&t->StartGameMutex);
-
-    pthread_mutex_lock(&t->NextPlayerMutex);
-    // Wait for turn
-    // 
-    pthread_mutex_unlock(&t->NextPlayerMutex);
-
-    if (dealer)
+    while (t->roundNum < numOfRounds)
     {
-        munmap(t, sizeof(table) + sizeof(player) * arguments.numberOfPlayers);
-        shm_unlink(arguments.shmName);
+        wait_for_turn(t, arguments.pl);
+        printf("Round: %d\n", t->roundNum);
+
+        if (dealer && t->roundNum == -1)
+        {
+           DealCards();
+        }
+        else
+        {
+            Play();
+        } 
+
+        if (dealer)
+        {
+            t->roundNum++;
+        }
+
+        next_player(t);
     }
 
-    printf("done\n");
+    printf("Done\n");
 
     return 0;
 }
@@ -99,6 +132,7 @@ void cmdArgs_init(cmdArgs* ca)
     ca->playerName = NULL;
     ca->shmName = NULL;
     ca->numberOfPlayers = 0;
+    ca->pl = NULL;
 }
 
 cmdArgs cmdArgs_new()
@@ -198,7 +232,7 @@ void print_usage(bool err)
             "  n_players - number of players\n");
 }
 
-table* join_table(const cmdArgs* args)
+table* join_table(cmdArgs* args)
 {
     int shmfd = shm_open(args->shmName, O_EXCL | O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     table* result = NULL;
@@ -215,6 +249,7 @@ table* join_table(const cmdArgs* args)
 
         if (ftruncate(shmfd, sizeof(table) + sizeof(player) * args->numberOfPlayers) == -1)
         {
+            close(shmfd);
             shm_unlink(args->shmName);
             return NULL;
         }
@@ -222,8 +257,6 @@ table* join_table(const cmdArgs* args)
         *result = table_new(args->numberOfPlayers);
         dealer = true;
     }
-
-    printf("mmap: %p\n", result);
 
     int playerNum = result->numPlayers;
 
@@ -252,5 +285,53 @@ table* join_table(const cmdArgs* args)
 
     player_set_fifo_name(p, tempFifoName);
 
+    args->pl = p;
+
+    close(shmfd);
     return result;
+}
+
+void next_player(table* t)
+{
+    t->turn = (t->turn + 1) % t->numMaxPlayers;
+    pthread_cond_broadcast(&t->NextPlayerCondVar);
+}
+
+void wait_for_turn(table* t, player* p)
+{
+    printf("Waiting for turn...\n");
+
+    pthread_mutex_lock(&t->NextPlayerMutex);
+
+    while (t->turn != p->number)
+    {
+        printf("Player %d turn.\n", t->turn);
+        pthread_cond_wait(&t->NextPlayerCondVar, &t->NextPlayerMutex);
+    }
+
+    pthread_mutex_unlock(&t->NextPlayerMutex);
+}
+
+void wait_for_game_start(table* t)
+{
+    printf("Waiting for game to start...\n");
+
+    pthread_mutex_lock(&t->StartGameMutex);
+
+    while (t->numPlayers != t->numMaxPlayers)
+        pthread_cond_wait(&t->StartGameCondVar, &t->StartGameMutex);
+
+    pthread_mutex_unlock(&t->StartGameMutex);
+
+    pthread_cond_broadcast(&t->StartGameCondVar);
+}
+
+void Play()
+{
+    sleep(3);
+}
+
+void DealCards()
+{
+    printf("Dealing Cards...\n");
 }

@@ -12,6 +12,8 @@ void table_init(table* t)
     assert(t);
     t->numMaxPlayers = 0;
     t->numPlayers = 0;
+    t->turn = 0;
+    t->roundNum = -1;
 
     pthread_mutexattr_t mattr; 
     pthread_mutexattr_init(&mattr); 
