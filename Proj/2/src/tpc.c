@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 typedef struct cmdArgs_t
 {
@@ -32,7 +33,8 @@ void wait_for_turn(table* t, player* p);
 void wait_for_game_start(table* t);
 
 void Play();
-void DealCards();
+void* DealCards(void* tblArg);
+void ReceiveCards(table* t, player* p);
 
 /**
  * Prints information on how to use this program
@@ -98,19 +100,30 @@ int main(int argc, char** argv)
 
     printf("NumberOfRounds: %d\n", numOfRounds);
 
+    pthread_t dealThr;
+
+    if (dealer)
+    {
+        if (pthread_create(&dealThr, NULL, DealCards, t) != 0)
+            perror("pthread_create");
+    }
+
+    ReceiveCards(t, arguments.pl);
+
+    if (dealer)
+    {
+        pthread_join(dealThr, NULL);
+        t->roundNum++;
+    }
+
     while (t->roundNum < numOfRounds)
     {
+        pthread_mutex_lock(&t->NextPlayerMutex);
         wait_for_turn(t, arguments.pl);
+        
         printf("Round: %d\n", t->roundNum);
 
-        if (dealer && t->roundNum == -1)
-        {
-           DealCards();
-        }
-        else
-        {
-            Play();
-        } 
+        Play();
 
         if (dealer)
         {
@@ -118,6 +131,8 @@ int main(int argc, char** argv)
         }
 
         next_player(t);
+
+        pthread_mutex_unlock(&t->NextPlayerMutex);
     }
 
     printf("Done\n");
@@ -267,6 +282,8 @@ table* join_table(cmdArgs* args)
         return NULL;
     }
 
+    pthread_mutex_lock(&result->AccessMutex);
+
     result->numPlayers++;
 
     printf("Player Number: %d\n", playerNum);
@@ -281,11 +298,13 @@ table* join_table(cmdArgs* args)
 
     char tempFifoName[1024];
 
-    sprintf(tempFifoName, "%sfifo%d", args->shmName, playerNum);
+    sprintf(tempFifoName, "/tmp/%sfifo%d", args->shmName, playerNum);
 
     player_set_fifo_name(p, tempFifoName);
 
     args->pl = p;
+
+    pthread_mutex_unlock(&result->AccessMutex);
 
     close(shmfd);
     return result;
@@ -293,7 +312,10 @@ table* join_table(cmdArgs* args)
 
 void next_player(table* t)
 {
+    pthread_mutex_lock(&t->AccessMutex);
     t->turn = (t->turn + 1) % t->numMaxPlayers;
+    pthread_mutex_unlock(&t->AccessMutex);
+
     pthread_cond_broadcast(&t->NextPlayerCondVar);
 }
 
@@ -301,15 +323,15 @@ void wait_for_turn(table* t, player* p)
 {
     printf("Waiting for turn...\n");
 
-    pthread_mutex_lock(&t->NextPlayerMutex);
+    //pthread_mutex_lock(&t->NextPlayerMutex);
 
     while (t->turn != p->number)
     {
-        printf("Player %d turn.\n", t->turn);
+        //printf("Player %d turn.\n", t->turn);
         pthread_cond_wait(&t->NextPlayerCondVar, &t->NextPlayerMutex);
     }
 
-    pthread_mutex_unlock(&t->NextPlayerMutex);
+    //pthread_mutex_unlock(&t->NextPlayerMutex);
 }
 
 void wait_for_game_start(table* t)
@@ -328,10 +350,67 @@ void wait_for_game_start(table* t)
 
 void Play()
 {
-    sleep(3);
+    printf("Playing...\n");
+    /*sleep(3);*/
 }
 
-void DealCards()
+void* DealCards(void* tblArg)
 {
-    printf("Dealing Cards...\n");
+    table* t = tblArg;
+
+    pthread_mutex_lock(&t->FifosReadyMutex);
+    while (t->numberFifosReady < t->numPlayers) pthread_cond_wait(&t->FifosReadyCondVar, &t->FifosReadyMutex);
+    pthread_mutex_unlock(&t->FifosReadyMutex);
+
+    for (int i = 0; i < t->numPlayers; ++i)
+    {
+        int fd = open(t->players[i].fifoName, O_WRONLY);
+
+        if (fd < 0)
+        {
+            perror("open fifo deal");
+            exit(EXIT_FAILURE);
+        }
+
+        char buf[50];
+
+        sprintf(buf, "player %d cards\n", i);
+
+        write(fd, buf, 50);
+
+        close(fd);
+    }
+
+    return NULL;
+}
+
+void ReceiveCards(table* t, player* p)
+{
+    if (mkfifo(p->fifoName, 0660) < 0)
+    {
+        perror("mkfifo");
+        exit(EXIT_FAILURE);
+    }
+
+    t->numberFifosReady++;
+    pthread_cond_signal(&t->FifosReadyCondVar);
+
+    int fd = open(p->fifoName, O_RDONLY);
+
+    if (fd < 0)
+    {
+        perror("open fifo receive");
+        exit(EXIT_FAILURE);
+    }
+
+    char buf[50];
+
+    while (read(fd, buf, 50) != 0)
+    {
+        printf("%s\n", buf);
+    }
+
+    close(fd);
+
+    unlink(p->fifoName);
 }
