@@ -71,6 +71,22 @@ typedef struct card_s_t
 } card_s;
 
 /**
+ * Initialize a card.
+ * @param c card
+ * @param r card's rank
+ * @param s card's suit
+ */
+void card_init(card* c, rank r, suit s);
+
+/**
+ * Create a new card.
+ * @param  r card's rank
+ * @param  s card's suit
+ * @return   card
+ */
+card card_new(rank r, suit s);
+
+/**
  * String representation of a card.
  * @param  card Card.
  * @return A card_s object. Use card_s.str to get a char*.
