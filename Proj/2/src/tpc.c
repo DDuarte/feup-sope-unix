@@ -1,5 +1,6 @@
 #include "player.h"
 #include "table.h"
+#include "keyboard.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -12,234 +13,164 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <errno.h>
 
-typedef struct cmdArgs_t
+struct
 {
-    char* playerName;
-    char* shmName;
-    player* pl;
-    unsigned int numberOfPlayers;
-} cmdArgs;
+    char*        PlayerName;
+    char*        ShmName;
+    player*      Player;
+    bool         IsDealer;
+    table*       Table;
+    unsigned int NumberOfPlayers;
+    keyboard     Keyboard;
+    pthread_t    KeyboardThread;
+    bool         KeyboardThreadExecuting;
+    bool         Finished;
+} globals;
 
-void cmdArgs_init(cmdArgs* ca);
-cmdArgs cmdArgs_new();
-void cmdArgs_set_name(cmdArgs* ca, const char* newName);
-void cmdArgs_set_shm_name(cmdArgs* ca, const char* newShmName);
+bool ParseArguments(int argc, char** argv);
 
-bool parse_arguments(cmdArgs* dest, int argc, char** argv);
-
-void next_player(table* t);
-void wait_for_turn(table* t, player* p);
-void wait_for_game_start(table* t);
+void NextPlayer();
+void WaitForTurn();
+void WaitForGameStart();
 
 void Play();
-void* DealCards(void* tblArg);
-void ReceiveCards(table* t, player* p);
+void* DealCards(void*);
+void ReceiveCards();
+
+void* KeyboardFunc(void*);
 
 /**
  * Prints information on how to use this program
  * @param err if true, info will be printed to stderr; otherwise stdout
  */
-void print_usage(bool err);
+void PrintUsage(bool err);
 
-table* join_table(cmdArgs* args);
+void JoinTable();
 
-bool dealer = false;
-table* tbl = NULL;
-cmdArgs arguments;
-
-void exitHandler()
+void InitGlobals()
 {
-    if (dealer)
-    {
-        wait_for_turn(tbl, arguments.pl);
+    globals.PlayerName = NULL;
+    globals.ShmName = NULL;
+    globals.Player = NULL;
+    globals.IsDealer = false;
+    globals.Table = NULL;
+    globals.NumberOfPlayers = 0;
+    globals.Keyboard = keyboard_new();
+    globals.KeyboardThreadExecuting = false;
+    globals.Finished = false;
+}
 
-        munmap(tbl, sizeof(table) + sizeof(player) * arguments.numberOfPlayers);
-        shm_unlink(arguments.shmName);
+void ExitHandler()
+{
+    if (globals.IsDealer)
+    {
+        WaitForTurn(globals.Table, globals.Player);
+
+        munmap(globals.Table, sizeof(table) + sizeof(player) * globals.NumberOfPlayers);
+        shm_unlink(globals.ShmName);
     }
+
+    if (globals.KeyboardThreadExecuting)
+        pthread_join(globals.KeyboardThread, NULL);
 }
 
 int main(int argc, char** argv)
 {
-    arguments = cmdArgs_new();
+    InitGlobals();
 
-    atexit(exitHandler);
+    atexit(ExitHandler);
 
     if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0))
     {
-        print_usage(false);
+        PrintUsage(false);
         return EXIT_SUCCESS;
     }
-    else if (!parse_arguments(&arguments, argc, argv))
+    else if (!ParseArguments(argc, argv))
     {
-        print_usage(true);
+        PrintUsage(true);
         return EXIT_FAILURE;
     }
 
-    /*printf("Player: %s\nTable: %s\nNumberOfPlayers: %d\n", arguments.playerName, arguments.shmName, arguments.numberOfPlayers);*/
+    JoinTable();
 
-    table* t = join_table(&arguments);
-    tbl = t;
-
-    if (!t)
+    if (!globals.Table)
     {
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    /*printf("Table: %d\n\tNumberOfPlayers: %d\n", t->numMaxPlayers, t->numPlayers);
+    WaitForGameStart();
 
-    for (int i = 0; i < t->numPlayers; ++i)
-    {
-        player* p = &(t->players[i]);
-        printf("\tPlayer %d: \n\t\tName: %s\n\t\tFifoName: %s\n", p->number, p->name, p->fifoName);
-    }*/
-
-    wait_for_game_start(t);
-    
-    int numOfRounds = 52 / t->numPlayers;
+    int numOfRounds = 52 / globals.Table->numPlayers;
 
     printf("NumberOfRounds: %d\n", numOfRounds);
 
     pthread_t dealThr;
 
-    if (dealer)
+    if (globals.IsDealer)
     {
-        if (pthread_create(&dealThr, NULL, DealCards, t) != 0)
+        if (pthread_create(&dealThr, NULL, DealCards, NULL) != 0)
             perror("pthread_create");
     }
 
-    ReceiveCards(t, arguments.pl);
+    ReceiveCards();
 
-    if (dealer)
+    if (globals.IsDealer)
     {
         pthread_join(dealThr, NULL);
-        t->roundNum++;
+        globals.Table->roundNum++;
     }
 
-    while (t->roundNum < numOfRounds)
+    if (pthread_create(&globals.KeyboardThread, NULL, KeyboardFunc, NULL) != 0)
+        perror("Keyboard thread creation failed");
+
+    while (globals.Table->roundNum < numOfRounds)
     {
-        pthread_mutex_lock(&t->NextPlayerMutex);
-        wait_for_turn(t, arguments.pl);
-        
-        printf("Round: %d\n", t->roundNum);
+        pthread_mutex_lock(&globals.Table->NextPlayerMutex);
+        WaitForTurn();
+
+        printf("Round: %d\n", globals.Table->roundNum);
 
         Play();
 
-        if (dealer)
+        if (globals.IsDealer)
         {
-            t->roundNum++;
+            globals.Table->roundNum++;
         }
 
-        next_player(t);
+        NextPlayer();
 
-        pthread_mutex_unlock(&t->NextPlayerMutex);
+        pthread_mutex_unlock(&globals.Table->NextPlayerMutex);
     }
 
-    printf("Done\n");
+    globals.Finished = true;
 
     return 0;
 }
 
-void cmdArgs_init(cmdArgs* ca)
+bool ParseArguments(int argc, char** argv)
 {
-    assert(ca);
-
-    ca->playerName = NULL;
-    ca->shmName = NULL;
-    ca->numberOfPlayers = 0;
-    ca->pl = NULL;
-}
-
-cmdArgs cmdArgs_new()
-{
-    cmdArgs result;
-    cmdArgs_init(&result);
-    return result;
-}
-
-void cmdArgs_set_name(cmdArgs* ca, const char* newName)
-{
-    assert(ca);
-
-    if (newName)
-    {
-        unsigned int newNameSize = strlen(newName);
-
-        if (ca->playerName)
-        {
-            ca->playerName = realloc(ca->playerName, newNameSize * sizeof(char));
-            strcpy(ca->playerName, newName);
-        }
-        else
-        {
-            ca->playerName = malloc(newNameSize * sizeof(char));
-            strcpy(ca->playerName, newName);
-        }
-    }
-    else
-    {
-        if (ca->playerName)
-        {
-            free(ca->playerName);
-            ca->playerName = NULL;
-        }
-    }
-}
-
-void cmdArgs_set_shm_name(cmdArgs* ca, const char* newShmName)
-{
-    assert(ca);
-
-    if (newShmName)
-    {
-        unsigned int newShmNameSize = strlen(newShmName);
-
-        if (ca->shmName)
-        {
-            ca->shmName = realloc(ca->shmName, newShmNameSize * sizeof(char));
-            strcpy(ca->shmName, newShmName);
-        }
-        else
-        {
-            ca->shmName = malloc(newShmNameSize * sizeof(char));
-            strcpy(ca->shmName, newShmName);
-        }
-    }
-    else
-    {
-        if (ca->shmName)
-        {
-            free(ca->shmName);
-            ca->shmName = NULL;
-        }
-    }
-}
-
-bool parse_arguments(cmdArgs* dest, int argc, char** argv)
-{
-    assert(dest);
 
     if (argc != 4)
         return false;
 
     /* Player Name */
-    cmdArgs_set_name(dest, argv[1]);
-
+    globals.PlayerName = strdup(argv[1]);
     /* Shm Name */
     int shmNameSize = strlen(argv[2]) + 1;
     char* tempShmName = malloc(shmNameSize * sizeof(char));
     strcpy(tempShmName, "/");
     strcat(tempShmName, argv[2]);
-    cmdArgs_set_shm_name(dest, tempShmName);
-    free(tempShmName);
+    globals.ShmName = tempShmName;
 
     int numPlayers = atoi(argv[3]);
-    dest->numberOfPlayers = numPlayers;
+    globals.NumberOfPlayers = numPlayers;
 
     return true;
 }
 
-void print_usage(bool err)
+void PrintUsage(bool err)
 {
     fprintf(err ? stderr : stdout, "Usage: tpc <player_name> <table_name> <n_players>\n"
             "  player_name  - your name;\n"
@@ -247,124 +178,120 @@ void print_usage(bool err)
             "  n_players - number of players\n");
 }
 
-table* join_table(cmdArgs* args)
+void JoinTable()
 {
-    int shmfd = shm_open(args->shmName, O_EXCL | O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-    table* result = NULL;
+    int shmfd = shm_open(globals.ShmName, O_EXCL | O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 
     if (shmfd < 0) /* Already exists. */
     {
         printf("Table exists... Joining Table...\n");
-        shmfd = shm_open(args->shmName, O_RDWR , 0775);
-        result = mmap(0, sizeof(table) + sizeof(player) * args->numberOfPlayers, PROT_READ|PROT_WRITE,MAP_SHARED, shmfd,0); 
+        shmfd = shm_open(globals.ShmName, O_RDWR , 0775);
+        globals.Table = mmap(0, sizeof(table) + sizeof(player) * globals.NumberOfPlayers, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
     }
     else /* Just Created a table with this name */
     {
         printf("Table doesn't exists... Creating Table...\n");
 
-        if (ftruncate(shmfd, sizeof(table) + sizeof(player) * args->numberOfPlayers) == -1)
+        if (ftruncate(shmfd, sizeof(table) + sizeof(player) * globals.NumberOfPlayers) == -1)
         {
             close(shmfd);
-            shm_unlink(args->shmName);
-            return NULL;
+            shm_unlink(globals.ShmName);
+            globals.Table = NULL;
+            return;
         }
-        result = mmap(0, sizeof(table) + sizeof(player) * args->numberOfPlayers, PROT_READ|PROT_WRITE,MAP_SHARED, shmfd,0); 
-        *result = table_new(args->numberOfPlayers);
-        dealer = true;
+        globals.Table = mmap(0, sizeof(table) + sizeof(player) * globals.NumberOfPlayers, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
+        *globals.Table = table_new(globals.NumberOfPlayers);
+        globals.IsDealer = true;
     }
 
-    int playerNum = result->numPlayers;
+    int playerNum = globals.Table->numPlayers;
 
-    if (playerNum >= result->numMaxPlayers)
+    if (playerNum >= globals.Table->numMaxPlayers)
     {
         printf("Table is full.\n");
         close(shmfd);
-        return NULL;
+        globals.Table = NULL;
+        return;
     }
 
-    pthread_mutex_lock(&result->AccessMutex);
+    pthread_mutex_lock(&globals.Table->AccessMutex);
 
-    result->numPlayers++;
+    globals.Table->numPlayers++;
 
     printf("Player Number: %d\n", playerNum);
-    printf("Max number of Players: %d\n", result->numMaxPlayers);
-    printf("NumberOfPlayers: %d\n", result->numPlayers);
+    printf("Max number of Players: %d\n", globals.Table->numMaxPlayers);
+    printf("NumberOfPlayers: %d\n", globals.Table->numPlayers);
 
-    player* p = &(result->players[playerNum]);
+    globals.Player = &(globals.Table->players[playerNum]);
 
-    p->number = playerNum;
+    globals.Player->number = playerNum;
 
-    player_set_name(p,args->playerName);
+    player_set_name(globals.Player, globals.PlayerName);
 
     char tempFifoName[1024];
 
-    sprintf(tempFifoName, "/tmp/%sfifo%d", args->shmName, playerNum);
+    sprintf(tempFifoName, "/tmp/%sfifo%d", globals.ShmName, playerNum);
 
-    player_set_fifo_name(p, tempFifoName);
+    player_set_fifo_name(globals.Player, tempFifoName);
 
-    args->pl = p;
-
-    pthread_mutex_unlock(&result->AccessMutex);
+    pthread_mutex_unlock(&globals.Table->AccessMutex);
 
     close(shmfd);
-    return result;
 }
 
-void next_player(table* t)
+void NextPlayer()
 {
-    pthread_mutex_lock(&t->AccessMutex);
-    t->turn = (t->turn + 1) % t->numMaxPlayers;
-    pthread_mutex_unlock(&t->AccessMutex);
+    pthread_mutex_lock(&globals.Table->AccessMutex);
+    globals.Table->turn = (globals.Table->turn + 1) % globals.Table->numMaxPlayers;
+    pthread_mutex_unlock(&globals.Table->AccessMutex);
 
-    pthread_cond_broadcast(&t->NextPlayerCondVar);
+    pthread_cond_broadcast(&globals.Table->NextPlayerCondVar);
 }
 
-void wait_for_turn(table* t, player* p)
+void WaitForTurn()
 {
     printf("Waiting for turn...\n");
 
-    //pthread_mutex_lock(&t->NextPlayerMutex);
-
-    while (t->turn != p->number)
+    while (globals.Table->turn != globals.Player->number)
     {
-        //printf("Player %d turn.\n", t->turn);
-        pthread_cond_wait(&t->NextPlayerCondVar, &t->NextPlayerMutex);
+        pthread_cond_wait(&globals.Table->NextPlayerCondVar, &globals.Table->NextPlayerMutex);
     }
-
-    //pthread_mutex_unlock(&t->NextPlayerMutex);
 }
 
-void wait_for_game_start(table* t)
+void WaitForGameStart()
 {
     printf("Waiting for game to start...\n");
 
-    pthread_mutex_lock(&t->StartGameMutex);
+    pthread_mutex_lock(&globals.Table->StartGameMutex);
 
-    while (t->numPlayers != t->numMaxPlayers)
-        pthread_cond_wait(&t->StartGameCondVar, &t->StartGameMutex);
+    while (globals.Table->numPlayers != globals.Table->numMaxPlayers)
+        pthread_cond_wait(&globals.Table->StartGameCondVar, &globals.Table->StartGameMutex);
 
-    pthread_mutex_unlock(&t->StartGameMutex);
+    pthread_mutex_unlock(&globals.Table->StartGameMutex);
 
-    pthread_cond_broadcast(&t->StartGameCondVar);
+    pthread_cond_broadcast(&globals.Table->StartGameCondVar);
 }
 
 void Play()
 {
-    printf("Playing...\n");
+    globals.Keyboard.playersTurn = true;
+    printf("You Can Play!\n");
+    pthread_mutex_lock(&globals.Keyboard.FinishPlayingMutex);
+    pthread_cond_wait(&globals.Keyboard.FinishPlayingCondVar, &globals.Keyboard.FinishPlayingMutex);
+    pthread_mutex_unlock(&globals.Keyboard.FinishPlayingMutex);
+    globals.Keyboard.playersTurn = false;
     /*sleep(3);*/
 }
 
-void* DealCards(void* tblArg)
+void* DealCards(void* dummie)
 {
-    table* t = tblArg;
+    pthread_mutex_lock(&globals.Table->FifosReadyMutex);
+    while (globals.Table->numberFifosReady < globals.Table->numPlayers) pthread_cond_wait(&globals.Table->FifosReadyCondVar, &globals.Table->FifosReadyMutex);
+    pthread_mutex_unlock(&globals.Table->FifosReadyMutex);
 
-    pthread_mutex_lock(&t->FifosReadyMutex);
-    while (t->numberFifosReady < t->numPlayers) pthread_cond_wait(&t->FifosReadyCondVar, &t->FifosReadyMutex);
-    pthread_mutex_unlock(&t->FifosReadyMutex);
-
-    for (int i = 0; i < t->numPlayers; ++i)
+    for (int i = 0; i < globals.Table->numPlayers; ++i)
     {
-        int fd = open(t->players[i].fifoName, O_WRONLY);
+        int fd = open(globals.Table->players[i].fifoName, O_WRONLY);
 
         if (fd < 0)
         {
@@ -384,18 +311,18 @@ void* DealCards(void* tblArg)
     return NULL;
 }
 
-void ReceiveCards(table* t, player* p)
+void ReceiveCards()
 {
-    if (mkfifo(p->fifoName, 0660) < 0)
+    if (mkfifo(globals.Player->fifoName, 0660) < 0)
     {
         perror("mkfifo");
         exit(EXIT_FAILURE);
     }
 
-    t->numberFifosReady++;
-    pthread_cond_signal(&t->FifosReadyCondVar);
+    globals.Table->numberFifosReady++;
+    pthread_cond_signal(&globals.Table->FifosReadyCondVar);
 
-    int fd = open(p->fifoName, O_RDONLY);
+    int fd = open(globals.Player->fifoName, O_RDONLY);
 
     if (fd < 0)
     {
@@ -412,5 +339,40 @@ void ReceiveCards(table* t, player* p)
 
     close(fd);
 
-    unlink(p->fifoName);
+    unlink(globals.Player->fifoName);
+}
+
+void* KeyboardFunc(void* dummie)
+{
+    globals.KeyboardThreadExecuting = true;
+    printf("Keyboard is Playing...\n");
+    char buffer[1024];
+    while (!globals.Finished)
+    {
+        printf("Insert your option: ");
+        fflush(stdout);
+        if (gets(buffer) != NULL)
+        {
+            if (strncmp(buffer, "play", strlen("play")) == 0)
+            {
+                if (globals.Keyboard.playersTurn)
+                {
+                    printf("Playing...\n");
+                    pthread_cond_signal(&globals.Keyboard.FinishPlayingCondVar);
+                }
+                else
+                {
+                    printf("Not your turn yet...\n");
+                }
+            }
+            else
+            {
+                printf("Unrecognized action...\n");
+            }
+
+        }
+    }
+    printf("Keyboard is Finished...\n");
+    globals.KeyboardThreadExecuting = false;
+    return NULL;
 }
