@@ -1,7 +1,7 @@
 CC=clang
 
 CFLAGS= -Wall -std=gnu11 -g
-LDFLAGS= -lrt -lpthread
+LDFLAGS= -lrt -lpthread -lm
 
 SRC_DIR= src
 BIN_DIR= bin

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
-
+#include <string.h>
 #include <pthread.h>
 
 void table_init(table* t, int numMaxPlayers)
@@ -25,6 +25,7 @@ void table_init(table* t, int numMaxPlayers)
     pthread_mutex_init(&t->NextPlayerMutex, &mattr);
     pthread_mutex_init(&t->AccessMutex, &mattr);
     pthread_mutex_init(&t->FifosReadyMutex, &mattr);
+    pthread_mutex_init(&t->LoggerMutex, &mattr);
 
     pthread_condattr_t cattr; 
     pthread_condattr_init(&cattr); 
@@ -64,4 +65,17 @@ void table_shuffle_cards(table* t)
         t->cards[j] = t->cards[i];
         t->cards[i] = aux;
     }
+}
+
+int table_getMaxPlayerNameSize(table* t)
+{
+    int max = 0;
+    for (int i = 0; i < t->numPlayers; ++i)
+    {
+        int size = strlen(t->players[i].name);
+        if (size > max)
+            max = size;
+    }
+
+    return max;
 }

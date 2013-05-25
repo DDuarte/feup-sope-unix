@@ -21,6 +21,7 @@ typedef struct table_t
     pthread_mutex_t NextPlayerMutex;
     pthread_cond_t FifosReadyCondVar;
     pthread_mutex_t FifosReadyMutex;
+    pthread_mutex_t LoggerMutex;
     int numberFifosReady;
     card   cards[NUMBER_OF_CARDS];
     int nextCard;
@@ -30,5 +31,6 @@ typedef struct table_t
 void table_init(table* t, int numMaxPlayers);
 table table_new(int numMaxPlayers);
 void table_shuffle_cards(table* t);
+int table_getMaxPlayerNameSize(table* t);
 
 #endif /* TABLE_H_ */

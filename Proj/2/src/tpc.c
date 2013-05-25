@@ -17,11 +17,13 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <math.h>
 
 struct
 {
     char*        PlayerName;
     char*        ShmName;
+    char*        LogFileName;
     player*      Player;
     bool         IsDealer;
     table*       Table;
@@ -30,9 +32,21 @@ struct
     keyboard     Keyboard;
     pthread_t    KeyboardThread;
     bool         KeyboardThreadExecuting;
+    int          LogFd;
     hand         PlayerHand;
     bool         Finished;
+    int          NameSize;
 } globals;
+
+typedef enum action_e
+{
+    A_DEAL,
+    A_RECEIVE,
+    A_PLAY,
+    A_HAND
+} action;
+
+char action_str[][STRING_MAX_LENGTH] = { "deal", "receive_cards", "play", "hand" };
 
 bool ParseArguments(int argc, char** argv);
 
@@ -43,6 +57,68 @@ void WaitForGameStart();
 void Play();
 void* DealCards(void*);
 void ReceiveCards();
+
+void LogHeader()
+{
+    char buffer[1024];
+    strcpy(buffer, "");
+    sprintf(buffer, "%-19s | %*s | %-13s | result\n", "when", -globals.NameSize, "who", "what");
+    pthread_mutex_lock(&globals.Table->LoggerMutex);
+
+    lseek(globals.LogFd, 0, SEEK_END);
+
+    write(globals.LogFd, buffer, (strlen(buffer)) * sizeof(char));
+
+    pthread_mutex_unlock(&globals.Table->LoggerMutex);
+}
+
+void Log(action a)
+{
+    char buffer[1024];
+    char buffer2[1024];
+    strcpy(buffer, "");
+    strcpy(buffer2, "");
+
+    time_t now = time(NULL);
+    struct tm* timeinfo = localtime(&now);
+
+    strftime(buffer, 1024, "%Y-%m-%d %H:%M:%S", timeinfo);
+
+    char nameBuffer[1024];
+    strcpy(nameBuffer, "");
+
+    if (a == A_DEAL)
+        sprintf(nameBuffer, "Dealer-%s", globals.Player->name);
+    else
+        sprintf(nameBuffer, "Player%d-%s", globals.Player->number, globals.Player->name);
+
+    if (a == A_DEAL)
+    {
+        sprintf(buffer2, "%s | %*s | %-13s | -\n", buffer, -globals.NameSize, nameBuffer, action_str[a]);
+    }
+    else if (a == A_PLAY)
+    {
+        card_s cardStr = card_to_string(&globals.Table->cards[globals.Table->nextCard - 1]);
+        sprintf(buffer2, "%s | %*s | %-13s | %s\n", buffer, -globals.NameSize, nameBuffer, action_str[a], cardStr.str);
+    }
+    else if (a == A_RECEIVE || a == A_HAND)
+    {
+        hand_sort(&globals.PlayerHand);
+        char* handStr = hand_to_string(&globals.PlayerHand);
+        sprintf(buffer2, "%s | %*s | %-13s | %s\n", buffer, -globals.NameSize, nameBuffer, action_str[a], handStr);
+        free(handStr);
+    }
+
+    pthread_mutex_lock(&globals.Table->LoggerMutex);
+
+    lseek(globals.LogFd, 0, SEEK_END);
+
+    write(globals.LogFd, buffer2, (strlen(buffer2)) * sizeof(char));
+
+    pthread_mutex_unlock(&globals.Table->LoggerMutex);
+}
+
+
 
 void* KeyboardFunc(void*);
 
@@ -58,6 +134,7 @@ void InitGlobals()
 {
     globals.PlayerName = NULL;
     globals.ShmName = NULL;
+    globals.LogFileName = NULL;
     globals.Player = NULL;
     globals.IsDealer = false;
     globals.Table = NULL;
@@ -67,6 +144,9 @@ void InitGlobals()
     globals.KeyboardThreadExecuting = false;
     globals.Finished = false;
     globals.PlayerHand = hand_new();
+    globals.NameSize = 0;
+
+    globals.LogFd = -1;
 }
 
 void ExitHandler()
@@ -113,10 +193,13 @@ int main(int argc, char** argv)
 
     globals.NumberOfRounds = 52 / globals.Table->numPlayers;
 
+    globals.NameSize = 8 + table_getMaxPlayerNameSize(globals.Table) + (int)(floor(log10((double)(globals.Table->numMaxPlayers))));
+
     pthread_t dealThr;
 
     if (globals.IsDealer)
     {
+        LogHeader();
         if (pthread_create(&dealThr, NULL, DealCards, NULL) != 0)
             perror("pthread_create");
     }
@@ -170,6 +253,12 @@ bool ParseArguments(int argc, char** argv)
     strcpy(tempShmName, "/");
     strcat(tempShmName, argv[2]);
     globals.ShmName = tempShmName;
+
+    globals.LogFileName = malloc((shmNameSize + 3) * sizeof(char));
+    strcpy(globals.LogFileName, argv[2]);
+    strcat(globals.LogFileName, ".log");
+
+    printf("%s - %s\n", globals.ShmName, globals.LogFileName);
 
     int numPlayers = atoi(argv[3]);
     globals.NumberOfPlayers = numPlayers;
@@ -242,6 +331,16 @@ void JoinTable()
     player_set_fifo_name(globals.Player, tempFifoName);
 
     pthread_mutex_unlock(&globals.Table->AccessMutex);
+        
+    if (globals.IsDealer)
+        globals.LogFd = open(globals.LogFileName, O_WRONLY | O_CREAT | O_ASYNC, 0666);
+    else
+        globals.LogFd = open(globals.LogFileName, O_APPEND | O_WRONLY | O_ASYNC, 0666);
+
+    if (globals.LogFd == -1)
+    {
+        perror("open Log");
+    }
 
     close(shmfd);
 }
@@ -287,11 +386,13 @@ void Play()
     pthread_cond_wait(&globals.Keyboard.FinishPlayingCondVar, &globals.Keyboard.FinishPlayingMutex);
     pthread_mutex_unlock(&globals.Keyboard.FinishPlayingMutex);
     globals.Keyboard.playersTurn = false;
+    Log(A_PLAY);
     /*sleep(3);*/
 }
 
 void* DealCards(void* dummie)
 {
+    Log(A_DEAL);
     pthread_mutex_lock(&globals.Table->FifosReadyMutex);
     while (globals.Table->numberFifosReady < globals.Table->numPlayers) pthread_cond_wait(&globals.Table->FifosReadyCondVar, &globals.Table->FifosReadyMutex);
 
@@ -359,6 +460,8 @@ void ReceiveCards()
     close(fd);
 
     unlink(globals.Player->fifoName);
+
+    Log(A_RECEIVE);
 }
 
 void* KeyboardFunc(void* dummie)
@@ -431,6 +534,7 @@ void* KeyboardFunc(void* dummie)
                 char* handStr = hand_to_string(&globals.PlayerHand);
                 printf("%s\n", handStr);
                 free(handStr);
+                Log(A_HAND);
             }
             else if (strncmp(buffer, "show-played-cards", strlen("show-played-cards")) == 0)
             {
