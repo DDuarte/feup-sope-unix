@@ -3,6 +3,7 @@
 
 #include "player.h"
 #include "vector.h"
+#include "card.h"
 
 #include <pthread.h>
 #include <semaphore.h>
@@ -21,10 +22,13 @@ typedef struct table_t
     pthread_cond_t FifosReadyCondVar;
     pthread_mutex_t FifosReadyMutex;
     int numberFifosReady;
+    card   cards[NUMBER_OF_CARDS];
+    int nextCard;
     player players[]; /* vector<player> */
 } table;
 
 void table_init(table* t, int numMaxPlayers);
 table table_new(int numMaxPlayers);
+void table_shuffle_cards(table* t);
 
 #endif /* TABLE_H_ */

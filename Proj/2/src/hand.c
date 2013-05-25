@@ -96,7 +96,7 @@ void hand_sort(hand* h)
 char* hand_to_string(hand* h)
 {
     char buffer[1024];
-
+    
     int total_suit_counts[] = { 0, 0, 0, 0 };
     for (int i = 0; i < vector_size(&h->cards); ++i)
     {
@@ -127,6 +127,8 @@ char* hand_to_string(hand* h)
 
     int suit_counts[] = { 0, 0, 0, 0 };
 
+    strcpy(buffer, "");
+
     for (int i = 0; i < vector_size(&h->cards); ++i)
     {
         card* c = (card*)vector_get(&h->cards, i);
@@ -141,5 +143,7 @@ char* hand_to_string(hand* h)
             strcat(buffer, " / ");
     }
 
-    return strdup(buffer);
+    char* temp = malloc(strlen(buffer) * sizeof(char));
+    strcpy(temp, buffer);
+    return temp;
 }

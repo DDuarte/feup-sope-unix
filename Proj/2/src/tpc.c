@@ -1,6 +1,9 @@
 #include "player.h"
 #include "table.h"
 #include "keyboard.h"
+#include "card.h"
+#include "hand.h"
+#include "vector.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -23,9 +26,11 @@ struct
     bool         IsDealer;
     table*       Table;
     unsigned int NumberOfPlayers;
+    unsigned int NumberOfRounds;
     keyboard     Keyboard;
     pthread_t    KeyboardThread;
     bool         KeyboardThreadExecuting;
+    hand         PlayerHand;
     bool         Finished;
 } globals;
 
@@ -57,9 +62,11 @@ void InitGlobals()
     globals.IsDealer = false;
     globals.Table = NULL;
     globals.NumberOfPlayers = 0;
+    globals.NumberOfRounds = 0;
     globals.Keyboard = keyboard_new();
     globals.KeyboardThreadExecuting = false;
     globals.Finished = false;
+    globals.PlayerHand = hand_new();
 }
 
 void ExitHandler()
@@ -78,6 +85,8 @@ void ExitHandler()
 
 int main(int argc, char** argv)
 {
+    srand(time(NULL));
+
     InitGlobals();
 
     atexit(ExitHandler);
@@ -102,9 +111,7 @@ int main(int argc, char** argv)
 
     WaitForGameStart();
 
-    int numOfRounds = 52 / globals.Table->numPlayers;
-
-    printf("NumberOfRounds: %d\n", numOfRounds);
+    globals.NumberOfRounds = 52 / globals.Table->numPlayers;
 
     pthread_t dealThr;
 
@@ -125,7 +132,7 @@ int main(int argc, char** argv)
     if (pthread_create(&globals.KeyboardThread, NULL, KeyboardFunc, NULL) != 0)
         perror("Keyboard thread creation failed");
 
-    while (globals.Table->roundNum < numOfRounds)
+    while (globals.Table->roundNum < globals.NumberOfRounds)
     {
         pthread_mutex_lock(&globals.Table->NextPlayerMutex);
         WaitForTurn();
@@ -287,27 +294,40 @@ void* DealCards(void* dummie)
 {
     pthread_mutex_lock(&globals.Table->FifosReadyMutex);
     while (globals.Table->numberFifosReady < globals.Table->numPlayers) pthread_cond_wait(&globals.Table->FifosReadyCondVar, &globals.Table->FifosReadyMutex);
-    pthread_mutex_unlock(&globals.Table->FifosReadyMutex);
+
+    table_shuffle_cards(globals.Table);
+
+    globals.Table->nextCard = NUMBER_OF_CARDS % globals.Table->numPlayers;
+
+    int* fifosFd = malloc(globals.NumberOfPlayers * sizeof(int));
 
     for (int i = 0; i < globals.Table->numPlayers; ++i)
     {
-        int fd = open(globals.Table->players[i].fifoName, O_WRONLY);
+        fifosFd[i] = open(globals.Table->players[i].fifoName, O_WRONLY);
 
-        if (fd < 0)
+        if (fifosFd[i] < 0)
         {
             perror("open fifo deal");
+            free(fifosFd);
             exit(EXIT_FAILURE);
         }
-
-        char buf[50];
-
-        sprintf(buf, "player %d cards\n", i);
-
-        write(fd, buf, 50);
-
-        close(fd);
     }
 
+    int cardToDeal = globals.Table->nextCard;
+
+    for (int c = 0; c < globals.NumberOfRounds; ++c)
+        for (int i = 0; i < globals.Table->numPlayers; ++i)
+            write(fifosFd[i], &globals.Table->cards[cardToDeal++], sizeof(card));
+
+
+    for (int i = 0; i < globals.Table->numPlayers; ++i)
+    {
+        close(fifosFd[i]);
+    }
+
+    pthread_mutex_unlock(&globals.Table->FifosReadyMutex);
+
+    free(fifosFd);
     return NULL;
 }
 
@@ -330,11 +350,10 @@ void ReceiveCards()
         exit(EXIT_FAILURE);
     }
 
-    char buf[50];
-
-    while (read(fd, buf, 50) != 0)
+    card tempCard;
+    while (read(fd, &tempCard, sizeof(card)) != 0)
     {
-        printf("%s\n", buf);
+        hand_add_card(&globals.PlayerHand, tempCard);
     }
 
     close(fd);
@@ -357,12 +376,78 @@ void* KeyboardFunc(void* dummie)
             {
                 if (globals.Keyboard.playersTurn)
                 {
-                    printf("Playing...\n");
+                    printf("Choose a card:\n");
+
+                    hand_sort(&globals.PlayerHand);
+                    char* handStr = hand_to_string(&globals.PlayerHand);
+                    printf("%s\n", handStr);
+                    free(handStr);
+
+                    bool success = false;
+
+                    do
+                    {
+                        printf("Choose a card:");
+                        fflush(stdout);
+
+                        if (gets(buffer) == NULL)
+                        {
+                            success = false;
+                            continue;
+                        }
+                        
+                        int numOfCards = vector_size(&globals.PlayerHand.cards);
+
+                        for (int i = 0; i < numOfCards; ++i)
+                        {
+                            card* c = vector_get(&globals.PlayerHand.cards, i);
+                            card_s cStr = card_to_string(c);
+                            if (strncmp(buffer, cStr.str, strlen(cStr.str)) == 0)
+                            {
+                                globals.Table->cards[globals.Table->nextCard++] = *c;
+                                hand_remove_card(&globals.PlayerHand, *c);
+                                success = true;
+                                break;
+                            }
+                        }
+
+                        if (!success)
+                            printf("Card is not valid. Please try again.\n");
+
+                    }
+                    while (!success);
+
+
                     pthread_cond_signal(&globals.Keyboard.FinishPlayingCondVar);
                 }
                 else
                 {
                     printf("Not your turn yet...\n");
+                }
+            }
+            else if (strncmp(buffer, "show-hand", strlen("show-hand")) == 0)
+            {
+                hand_sort(&globals.PlayerHand);
+                char* handStr = hand_to_string(&globals.PlayerHand);
+                printf("%s\n", handStr);
+                free(handStr);
+            }
+            else if (strncmp(buffer, "show-played-cards", strlen("show-played-cards")) == 0)
+            {
+                if (globals.Table->nextCard > 0)
+                {
+                    card_s cardStr = card_to_string(&globals.Table->cards[0]);
+                    printf("%s", cardStr.str);
+                    for (int i = 1; i < globals.Table->nextCard; ++i)
+                    {
+                        cardStr = card_to_string(&globals.Table->cards[i]);
+                        printf(", %s", cardStr.str);
+                    }
+                    printf("\n");
+                }
+                else
+                {
+                    printf("There are no played cards yet...\n");
                 }
             }
             else

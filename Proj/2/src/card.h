@@ -6,6 +6,8 @@
  * Structs, arrays and functions used to represent a card.
  */
 
+#define NUMBER_OF_CARDS 52
+
 /**
  * Card suits.
  */
@@ -16,6 +18,10 @@ typedef enum suit_e
     SUIT_HEARTS, ///< h
     SUIT_DIAMONDS ///< d
 } suit;
+
+#define SUIT_FIRST SUIT_CLUBS
+#define SUIT_LAST  SUIT_DIAMONDS
+#define NUM_OF_SUITS (SUIT_LAST - SUIT_FIRST)
 
 /**
  * Card ranks.
@@ -36,6 +42,10 @@ typedef enum rank_e
     RANK_QUEEN, ///< Q
     RANK_KING ///< K
 } rank;
+
+#define RANK_FIRST RANK_ACE
+#define RANK_LAST  RANK_KING
+#define NUM_OF_RANKS (RANK_LAST - RANK_FIRST)
 
 /**
  * String representation of a suit.
