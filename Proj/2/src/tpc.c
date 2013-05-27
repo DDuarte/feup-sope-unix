@@ -317,7 +317,7 @@ void WaitForGameStart(void)
 void Play(void)
 {
     globals.Keyboard.playersTurn = true;
-    printf("I'ts your turn. You can play!\n");
+    printf("It's your turn. You can play!\n");
     pthread_mutex_lock(&globals.Keyboard.FinishPlayingMutex);
     pthread_cond_wait(&globals.Keyboard.FinishPlayingCondVar, &globals.Keyboard.FinishPlayingMutex);
     pthread_mutex_unlock(&globals.Keyboard.FinishPlayingMutex);
@@ -399,7 +399,7 @@ void ReceiveCards(void)
 void* KeyboardFunc(void* dummy __attribute__((unused)))
 {
     globals.KeyboardThreadExecuting = true;
-    printf("Keyboard is Playing...\n");
+    // printf("Keyboard is Playing...\n");
     char buffer[1024];
     while (!globals.Finished)
     {
@@ -488,7 +488,7 @@ void* KeyboardFunc(void* dummy __attribute__((unused)))
         }
     }
 
-    printf("Keyboard is Finished...\n");
+    // printf("Keyboard is Finished...\n");
     globals.KeyboardThreadExecuting = false;
     return NULL;
 }
