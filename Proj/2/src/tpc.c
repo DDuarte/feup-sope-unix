@@ -290,7 +290,14 @@ void WaitForTurn(void)
     printf("Waiting for turn...\n");
 
     while (globals.Table->turn != (int)globals.Player->number)
+	{
         pthread_cond_wait(&globals.Table->NextPlayerCondVar, &globals.Table->NextPlayerMutex);
+		if (globals.Table->nextCard != 0)
+		{
+			card_s c = card_to_string(&globals.Table->cards[globals.Table->nextCard-1]);
+			printf("Player %s played card %s.\n", globals.Table->players[(globals.Table->turn == 0 ? globals.Table->numPlayers - 1 : globals.Table->turn - 1)].name, c.str);
+		}
+	}
 }
 
 void WaitForGameStart(void)
@@ -310,7 +317,7 @@ void WaitForGameStart(void)
 void Play(void)
 {
     globals.Keyboard.playersTurn = true;
-    printf("You can play!\n");
+    printf("I'ts your turn. You can play!\n");
     pthread_mutex_lock(&globals.Keyboard.FinishPlayingMutex);
     pthread_cond_wait(&globals.Keyboard.FinishPlayingCondVar, &globals.Keyboard.FinishPlayingMutex);
     pthread_mutex_unlock(&globals.Keyboard.FinishPlayingMutex);
@@ -403,7 +410,7 @@ void* KeyboardFunc(void* dummy __attribute__((unused)))
             {
                 if (globals.Keyboard.playersTurn)
                 {
-                    printf("Choose a card: \n");
+                    printf("Your hand: \n");
 
                     char* handStr = hand_to_string(&globals.PlayerHand);
                     printf("%s\n", handStr);
@@ -572,6 +579,6 @@ void ExitHandler(void)
         shm_unlink(globals.ShmName);
     }
 
-    if (globals.KeyboardThreadExecuting)
-        pthread_join(globals.KeyboardThread, NULL);
+    /*if (globals.KeyboardThreadExecuting)
+        pthread_join(globals.KeyboardThread, NULL);*/
 }
