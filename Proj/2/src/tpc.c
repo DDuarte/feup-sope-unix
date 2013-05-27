@@ -290,14 +290,14 @@ void WaitForTurn(void)
     printf("Waiting for turn...\n");
 
     while (globals.Table->turn != (int)globals.Player->number)
-	{
+    {
         pthread_cond_wait(&globals.Table->NextPlayerCondVar, &globals.Table->NextPlayerMutex);
-		if (globals.Table->nextCard != 0)
-		{
-			card_s c = card_to_string(&globals.Table->cards[globals.Table->nextCard-1]);
-			printf("Player %s played card %s.\n", globals.Table->players[(globals.Table->turn == 0 ? globals.Table->numPlayers - 1 : globals.Table->turn - 1)].name, c.str);
-		}
-	}
+        if (globals.Table->nextCard != 0)
+        {
+            card_s c = card_to_string(&globals.Table->cards[globals.Table->nextCard-1]);
+            printf("Player %s played card %s.\n", globals.Table->players[(globals.Table->turn == 0 ? globals.Table->numPlayers - 1 : globals.Table->turn - 1)].name, c.str);
+        }
+    }
 }
 
 void WaitForGameStart(void)
