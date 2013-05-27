@@ -1,6 +1,6 @@
 CC=clang
 
-CFLAGS= -Wall -std=gnu11 -g
+CFLAGS= -std=gnu11 -g -Wall -pedantic -Wformat=2 -Wextra -Wfloat-equal -Wundef -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wstrict-prototypes -Waggregate-return -Wmissing-prototypes -Werror -pedantic-errors
 LDFLAGS= -lrt -lpthread -lm
 
 SRC_DIR= src
