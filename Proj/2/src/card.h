@@ -6,7 +6,7 @@
  * Structs, arrays and functions used to represent a card.
  */
 
-#define NUMBER_OF_CARDS 52
+#define NUMBER_OF_CARDS 52 ///< Number of available cards: 4 suits x 13 ranks
 
 /**
  * Card suits.
@@ -19,9 +19,9 @@ typedef enum suit_e
     SUIT_DIAMONDS ///< d
 } suit;
 
-#define SUIT_FIRST SUIT_CLUBS
-#define SUIT_LAST  SUIT_DIAMONDS
-#define NUM_OF_SUITS (SUIT_LAST - SUIT_FIRST)
+#define SUIT_FIRST SUIT_CLUBS ///< Index of first suit
+#define SUIT_LAST  SUIT_DIAMONDS ///< Index of last suit
+#define NUM_OF_SUITS (SUIT_LAST - SUIT_FIRST) ///< Number of suits
 
 /**
  * Card ranks.
@@ -43,9 +43,9 @@ typedef enum rank_e
     RANK_KING ///< K
 } rank;
 
-#define RANK_FIRST RANK_ACE
-#define RANK_LAST  RANK_KING
-#define NUM_OF_RANKS (RANK_LAST - RANK_FIRST)
+#define RANK_FIRST RANK_ACE ///< Index of first rank
+#define RANK_LAST  RANK_KING ///< Index of last rank
+#define NUM_OF_RANKS (RANK_LAST - RANK_FIRST) ///< Number of ranks
 
 /**
  * String representation of a suit.
@@ -102,6 +102,14 @@ card card_new(rank r, suit s);
  * @return A card_s object. Use card_s.str to get a char*.
  */
 card_s card_to_string(card* card);
+
+/**
+ * Compare two cards (in the format expected by qsort)
+ * @param  a First card
+ * @param  b Second card
+ * @return   0 if same card, -1 if 1st card is before 2nd card, 1 otherwise
+ */
+int cards_compare(const void* a, const void* b);
 
 /**@}*/
 

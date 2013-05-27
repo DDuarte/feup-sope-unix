@@ -18,7 +18,7 @@ typedef struct hand_t
 } hand;
 
 void hand_init(hand* h); ///< Initialize hand
-hand hand_new(); ///< Create a new hand.
+hand hand_new(void); ///< Create a new hand.
 void hand_free(hand* h); ///< Deallocate hand resources.
 
 void hand_add_card(hand* h, card c); ///< Add a card to hand.

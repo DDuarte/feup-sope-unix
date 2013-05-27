@@ -33,3 +33,25 @@ card_s card_to_string(card* c)
 
     return c_s;
 }
+
+int cards_compare(const void* a, const void* b)
+{
+    assert(a && b);
+
+    card* c1 = *((card**)a);
+    card* c2 = *((card**)b);
+
+    if (c1->suit == c2->suit)
+    {
+        if (c1->rank < c2->rank)
+            return -1;
+        else if (c1->rank > c2->rank)
+            return 1;
+        else
+            return 0;
+    }
+    else if (c1->suit < c2->suit)
+        return -1;
+    else
+        return 1;
+}

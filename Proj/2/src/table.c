@@ -11,15 +11,16 @@
 void table_init(table* t, int numMaxPlayers)
 {
     assert(t);
+
     t->numMaxPlayers = numMaxPlayers;
     t->numberFifosReady = 0;
     t->numPlayers = 0;
     t->turn = 0;
     t->roundNum = -1;
 
-    pthread_mutexattr_t mattr; 
-    pthread_mutexattr_init(&mattr); 
-    pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED); 
+    pthread_mutexattr_t mattr;
+    pthread_mutexattr_init(&mattr);
+    pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
 
     pthread_mutex_init(&t->StartGameMutex, &mattr);
     pthread_mutex_init(&t->NextPlayerMutex, &mattr);
@@ -27,9 +28,9 @@ void table_init(table* t, int numMaxPlayers)
     pthread_mutex_init(&t->FifosReadyMutex, &mattr);
     pthread_mutex_init(&t->LoggerMutex, &mattr);
 
-    pthread_condattr_t cattr; 
-    pthread_condattr_init(&cattr); 
-    pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_SHARED); 
+    pthread_condattr_t cattr;
+    pthread_condattr_init(&cattr);
+    pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_SHARED);
 
     pthread_cond_init(&t->StartGameCondVar, &cattr);
     pthread_cond_init(&t->NextPlayerCondVar, &cattr);
@@ -42,22 +43,17 @@ void table_init(table* t, int numMaxPlayers)
     t->nextCard = 0;
 }
 
-static table _table_new(int numMaxPlayers)
+table table_new(int numMaxPlayers)
 {
     table result;
     table_init(&result, numMaxPlayers);
     return result;
 }
 
-table table_new(int numMaxPlayers)
-{
-    table result = _table_new(numMaxPlayers);    
-
-    return result;
-}
-
 void table_shuffle_cards(table* t)
 {
+    assert(t);
+
     for (int i = 0; i < NUMBER_OF_CARDS - 1; ++i)
     {
         int j = (rand() % (NUMBER_OF_CARDS - i - 1)) + i + 1;
@@ -67,12 +63,14 @@ void table_shuffle_cards(table* t)
     }
 }
 
-int table_getMaxPlayerNameSize(table* t)
+size_t table_get_max_player_name_size(table* t)
 {
-    int max = 0;
+    assert(t);
+
+    size_t max = 0;
     for (int i = 0; i < t->numPlayers; ++i)
     {
-        int size = strlen(t->players[i].name);
+        size_t size = strlen(t->players[i].name);
         if (size > max)
             max = size;
     }

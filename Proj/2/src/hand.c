@@ -6,6 +6,8 @@
 #include <string.h>
 #include <malloc.h>
 
+#include "card.h"
+
 void hand_init(hand* h)
 {
     assert(h);
@@ -13,7 +15,7 @@ void hand_init(hand* h)
     vector_new(&h->cards);
 }
 
-hand hand_new()
+hand hand_new(void)
 {
     hand result;
     hand_init(&result);
@@ -57,32 +59,6 @@ void hand_remove_card(hand* h, card c)
     vector_erase(&h->cards, i);
 }
 
-int cards_compare(const void* a, const void* b)
-{
-    assert(a && b);
-
-    card* c1 = *((card**)a);
-    card* c2 = *((card**)b);
-
-    int ret;
-
-    if (c1->suit == c2->suit)
-    {
-        if (c1->rank < c2->rank)
-            return -1;
-        else if (c1->rank > c2->rank)
-            return 1;
-        else
-            return 0;
-    }
-    else if (c1->suit < c2->suit)
-        return -1;
-    else
-        return 1;
-
-    return ret;
-}
-
 void hand_sort(hand* h)
 {
     assert(h);
@@ -95,8 +71,12 @@ void hand_sort(hand* h)
 
 char* hand_to_string(hand* h)
 {
+    assert(h);
+
+    hand_sort(h);
+
     char buffer[1024];
-    
+
     int total_suit_counts[] = { 0, 0, 0, 0 };
     for (int i = 0; i < vector_size(&h->cards); ++i)
     {
@@ -143,7 +123,7 @@ char* hand_to_string(hand* h)
             strcat(buffer, " / ");
     }
 
-    char* temp = malloc(strlen(buffer) * sizeof(char));
+    char* temp = malloc((strlen(buffer) + 1) * sizeof(char));
     strcpy(temp, buffer);
     return temp;
 }
