@@ -1,0 +1,5 @@
+<map id="keyboard_init" name="keyboard_init">
+<area shape="rect" id="node3" href="$a00024.html#gac66a01d1afb0ecb5060c8cfbae092955" title="Returns an initialized keyboard." alt="" coords="152,5,259,35"/>
+<area shape="rect" id="node5" href="$a00018.html#a35669c13a3f15eb401cd77bbce026620" title="Initialize members of global struct." alt="" coords="308,5,391,35"/>
+<area shape="rect" id="node7" href="$a00018.html#a3c04138a5bfe5d72780bb7e82a18e627" title="Entry point for this program." alt="" coords="440,5,491,35"/>
+</map>

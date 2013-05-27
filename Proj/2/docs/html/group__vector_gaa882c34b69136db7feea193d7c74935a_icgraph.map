@@ -1,0 +1,11 @@
+<map id="vector_get" name="vector_get">
+<area shape="rect" id="node3" href="$group__hand.html#gaaed1cb63706af0e4cbd00189958f4b81" title="Deallocate hand resources." alt="" coords="151,5,228,35"/>
+<area shape="rect" id="node5" href="$group__hand.html#ga9199ffac3e1b88f36c1be1a7abefc402" title="Remove a card from hand." alt="" coords="292,56,423,85"/>
+<area shape="rect" id="node7" href="$tpc_8c.html#a2472512ed4f1e5cdc97c3ae3d9eaec2f" title="KeyboardFunc" alt="" coords="472,108,579,137"/>
+<area shape="rect" id="node9" href="$group__hand.html#gab2ec8087dba7497f99d963074f8f7eb2" title="String representing the hand. DO NOT FORGET TO FREE IT." alt="" coords="136,160,243,189"/>
+<area shape="rect" id="node12" href="$tpc_8c.html#aac308892fd95b45c178e1c956c54dac9" title="Writes action to log file." alt="" coords="336,211,379,240"/>
+<area shape="rect" id="node14" href="$tpc_8c.html#a209335d248e70fbe25a751fe6fad2a27" title="Blocks and plays a card." alt="" coords="501,161,549,191"/>
+<area shape="rect" id="node18" href="$tpc_8c.html#a393490d51244b4d6e34dac9ef6b705ec" title="DealCards" alt="" coords="484,215,567,244"/>
+<area shape="rect" id="node20" href="$tpc_8c.html#a3ae10775d1037b9ea96caa94669e44be" title="Gets cards from fifo." alt="" coords="473,268,577,297"/>
+<area shape="rect" id="node16" href="$tpc_8c.html#a3c04138a5bfe5d72780bb7e82a18e627" title="main" alt="" coords="627,215,677,244"/>
+</map>

@@ -323,6 +323,7 @@ void Play(void)
     pthread_mutex_unlock(&globals.Keyboard.FinishPlayingMutex);
     globals.Keyboard.playersTurn = false;
     Log(A_PLAY);
+    Log(A_HAND); // Debugging
 }
 
 void* DealCards(void* dummy __attribute__((unused)))

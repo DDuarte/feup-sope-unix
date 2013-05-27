@@ -1,0 +1,9 @@
+<map id="hand_sort" name="hand_sort">
+<area shape="rect" id="node3" href="$a00023.html#gab2ec8087dba7497f99d963074f8f7eb2" title="String representing the hand. DO NOT FORGET TO FREE IT." alt="" coords="133,33,240,63"/>
+<area shape="rect" id="node5" href="$a00018.html#a2472512ed4f1e5cdc97c3ae3d9eaec2f" title="KeyboardFunc" alt="" coords="379,5,485,35"/>
+<area shape="rect" id="node7" href="$a00018.html#aac308892fd95b45c178e1c956c54dac9" title="Writes action to log file." alt="" coords="288,59,331,88"/>
+<area shape="rect" id="node9" href="$a00018.html#a209335d248e70fbe25a751fe6fad2a27" title="Blocks and plays a card." alt="" coords="408,59,456,88"/>
+<area shape="rect" id="node13" href="$a00018.html#a393490d51244b4d6e34dac9ef6b705ec" title="DealCards" alt="" coords="391,112,473,141"/>
+<area shape="rect" id="node15" href="$a00018.html#a3ae10775d1037b9ea96caa94669e44be" title="Gets cards from fifo." alt="" coords="380,165,484,195"/>
+<area shape="rect" id="node11" href="$a00018.html#a3c04138a5bfe5d72780bb7e82a18e627" title="Entry point for this program." alt="" coords="533,112,584,141"/>
+</map>

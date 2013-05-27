@@ -87,7 +87,7 @@ char* hand_to_string(hand* h)
     if (total_suit_counts[0] == 0 &&
           total_suit_counts[1] == 0 &&
           total_suit_counts[2] == 0 &&
-          total_suit_counts[3])
+          total_suit_counts[3] == 0)
     {
         buffer[0] = '\0';
         return strdup("");

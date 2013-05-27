@@ -1,0 +1,11 @@
+<map id="KeyboardFunc" name="KeyboardFunc">
+<area shape="rect" id="node3" href="$a00023.html#gab2ec8087dba7497f99d963074f8f7eb2" title="String representing the hand. DO NOT FORGET TO FREE IT." alt="" coords="264,163,371,192"/>
+<area shape="rect" id="node7" href="$a00027.html#ga1e87859f5a282ea1c1c2791ef1ad0270" title="Size of vector." alt="" coords="596,84,684,114"/>
+<area shape="rect" id="node12" href="$a00027.html#gaa882c34b69136db7feea193d7c74935a" title="Element at position index." alt="" coords="443,111,525,140"/>
+<area shape="rect" id="node14" href="$a00022.html#ga1f1d2b1c294045da36e49a0be6f5a2d9" title="String representation of a card." alt="" coords="432,268,536,298"/>
+<area shape="rect" id="node19" href="$a00023.html#ga9199ffac3e1b88f36c1be1a7abefc402" title="Remove a card from hand." alt="" coords="252,58,383,87"/>
+<area shape="rect" id="node25" href="$a00018.html#aac308892fd95b45c178e1c956c54dac9" title="Writes action to log file." alt="" coords="160,214,203,243"/>
+<area shape="rect" id="node5" href="$a00023.html#ga7f5435a5021f10b3b73417d6a68d8e4b" title="Sort cards in hand (done by hand_to_string)." alt="" coords="445,215,523,244"/>
+<area shape="rect" id="node9" href="$a00022.html#ga81a333bc60ea09b8983d47f01a68f655" title="Compare two cards (in the format expected by qsort)" alt="" coords="585,215,695,244"/>
+<area shape="rect" id="node23" href="$a00027.html#ga951a0ef34f7e54967c45c59f9ded305b" title="Removes element at position index." alt="" coords="436,58,532,87"/>
+</map>

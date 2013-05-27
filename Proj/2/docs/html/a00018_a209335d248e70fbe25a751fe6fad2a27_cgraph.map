@@ -1,0 +1,9 @@
+<map id="Play" name="Play">
+<area shape="rect" id="node3" href="$a00018.html#aac308892fd95b45c178e1c956c54dac9" title="Writes action to log file." alt="" coords="101,32,144,61"/>
+<area shape="rect" id="node5" href="$a00022.html#ga1f1d2b1c294045da36e49a0be6f5a2d9" title="String representation of a card." alt="" coords="347,5,451,35"/>
+<area shape="rect" id="node7" href="$a00023.html#gab2ec8087dba7497f99d963074f8f7eb2" title="String representing the hand. DO NOT FORGET TO FREE IT." alt="" coords="192,57,299,87"/>
+<area shape="rect" id="node9" href="$a00023.html#ga7f5435a5021f10b3b73417d6a68d8e4b" title="Sort cards in hand (done by hand_to_string)." alt="" coords="360,109,437,139"/>
+<area shape="rect" id="node11" href="$a00027.html#ga1e87859f5a282ea1c1c2791ef1ad0270" title="Size of vector." alt="" coords="511,57,599,87"/>
+<area shape="rect" id="node16" href="$a00027.html#gaa882c34b69136db7feea193d7c74935a" title="Element at position index." alt="" coords="357,163,440,192"/>
+<area shape="rect" id="node13" href="$a00022.html#ga81a333bc60ea09b8983d47f01a68f655" title="Compare two cards (in the format expected by qsort)" alt="" coords="500,111,609,140"/>
+</map>

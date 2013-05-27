@@ -1,0 +1,35 @@
+<map id="main" name="main">
+<area shape="rect" id="node3" href="$a00018.html#a35669c13a3f15eb401cd77bbce026620" title="Initialize members of global struct." alt="" coords="137,32,220,61"/>
+<area shape="rect" id="node15" href="$a00018.html#a9550e83ca945ade9a0832dd373fac74e" title="Prints information on how to use this program." alt="" coords="136,85,221,115"/>
+<area shape="rect" id="node17" href="$a00018.html#a912fd970d2f8667272597122b5d9fe89" title="Parses console arguments." alt="" coords="120,139,237,168"/>
+<area shape="rect" id="node19" href="$a00018.html#ac6cab2f219e27454a6124ff9d65b4fa6" title="atexit handler" alt="" coords="133,192,224,221"/>
+<area shape="rect" id="node21" href="$a00018.html#aaa500afdf317da843946f88c5a5d11bb" title="Blocks until player is in right turn." alt="" coords="328,192,421,221"/>
+<area shape="rect" id="node23" href="$a00018.html#a530a83353adc1152ebd8df8491199d9d" title="Join this player to table." alt="" coords="140,296,217,325"/>
+<area shape="rect" id="node35" href="$a00018.html#ac45f5b5521f775baea053497a01063d9" title="Blocks until game starts." alt="" coords="113,349,244,379"/>
+<area shape="rect" id="node37" href="$a00026.html#gabfb7cdffe4c3269c7296b53af4b90f59" title="Calculates maximum number of characters for player&#39;s name." alt="" coords="104,402,253,449"/>
+<area shape="rect" id="node39" href="$a00018.html#ae628fe6944bd17cb6fc53c7c3ec4458f" title="Writes header to log file." alt="" coords="136,472,221,501"/>
+<area shape="rect" id="node41" href="$a00018.html#a334c34e5f65ca1e9b2805b680053d802" title="Distribute cards." alt="" coords="137,525,220,555"/>
+<area shape="rect" id="node43" href="$a00018.html#a3ae10775d1037b9ea96caa94669e44be" title="Gets cards from fifo." alt="" coords="127,579,231,608"/>
+<area shape="rect" id="node65" href="$a00018.html#ac54b9307641402d076c7b0eaba55006e" title="Function to start keyboard thread." alt="" coords="125,632,232,661"/>
+<area shape="rect" id="node68" href="$a00018.html#a209335d248e70fbe25a751fe6fad2a27" title="Blocks and plays a card." alt="" coords="155,685,203,715"/>
+<area shape="rect" id="node71" href="$a00018.html#af8d7ad9c85520834f9851014dee32a55" title="Advances turn to next player." alt="" coords="136,739,221,768"/>
+<area shape="rect" id="node5" href="$a00024.html#gac66a01d1afb0ecb5060c8cfbae092955" title="Returns an initialized keyboard." alt="" coords="321,5,428,35"/>
+<area shape="rect" id="node9" href="$a00023.html#ga47165601cd14c1115ac37438e86605cf" title="Create a new hand." alt="" coords="335,59,415,88"/>
+<area shape="rect" id="node7" href="$a00024.html#ga422fa2eb568049d68dac22a2620a0345" title="Initialize a keyboard." alt="" coords="511,5,609,35"/>
+<area shape="rect" id="node11" href="$a00023.html#gaa01fdce7a08c3244f13373542aa0d165" title="Initialize hand." alt="" coords="523,59,597,88"/>
+<area shape="rect" id="node13" href="$a00027.html#ga4c767de193ea3674ab101c805d098f0d" title="Create new vector." alt="" coords="680,59,768,88"/>
+<area shape="rect" id="node25" href="$a00026.html#ga1e82a8fbacabff891b7f22bdbd34a5e0" title="Returns an initialized table." alt="" coords="335,245,415,275"/>
+<area shape="rect" id="node31" href="$a00025.html#ga761441bacf27fb156667785386ad8f21" title="Sets the player&#39;s name." alt="" coords="315,299,435,328"/>
+<area shape="rect" id="node33" href="$a00025.html#ga2d7b416518d58ac941d831b808273f2c" title="Sets the player&#39;s fifoName." alt="" coords="301,352,448,381"/>
+<area shape="rect" id="node27" href="$a00026.html#gaaf9b689b35f7e32bf9072c1e351d3417" title="Initialize a table." alt="" coords="523,245,597,275"/>
+<area shape="rect" id="node29" href="$a00022.html#gacddf5b601efe9d4b115822f58ad00d64" title="Create a new card." alt="" coords="685,245,763,275"/>
+<area shape="rect" id="node45" href="$a00023.html#gaf1149aefeb9cd49a62390ea01b12474b" title="Add a card to hand." alt="" coords="320,579,429,608"/>
+<area shape="rect" id="node49" href="$a00018.html#aac308892fd95b45c178e1c956c54dac9" title="Writes action to log file." alt="" coords="353,671,396,700"/>
+<area shape="rect" id="node47" href="$a00027.html#ga0d36e1e11d647504f35299974f222766" title="Adds element to back of vector." alt="" coords="496,579,624,608"/>
+<area shape="rect" id="node51" href="$a00022.html#ga1f1d2b1c294045da36e49a0be6f5a2d9" title="String representation of a card." alt="" coords="672,644,776,673"/>
+<area shape="rect" id="node53" href="$a00023.html#gab2ec8087dba7497f99d963074f8f7eb2" title="String representing the hand. DO NOT FORGET TO FREE IT." alt="" coords="507,696,613,725"/>
+<area shape="rect" id="node55" href="$a00023.html#ga7f5435a5021f10b3b73417d6a68d8e4b" title="Sort cards in hand (done by hand_to_string)." alt="" coords="685,748,763,777"/>
+<area shape="rect" id="node57" href="$a00027.html#ga1e87859f5a282ea1c1c2791ef1ad0270" title="Size of vector." alt="" coords="836,696,924,725"/>
+<area shape="rect" id="node62" href="$a00027.html#gaa882c34b69136db7feea193d7c74935a" title="Element at position index." alt="" coords="683,801,765,831"/>
+<area shape="rect" id="node59" href="$a00022.html#ga81a333bc60ea09b8983d47f01a68f655" title="Compare two cards (in the format expected by qsort)" alt="" coords="825,749,935,779"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="hand_remove_card" name="hand_remove_card">
+<area shape="rect" id="node3" href="$group__vector.html#ga1e87859f5a282ea1c1c2791ef1ad0270" title="Size of vector." alt="" coords="192,5,280,35"/>
+<area shape="rect" id="node5" href="$group__vector.html#gaa882c34b69136db7feea193d7c74935a" title="Element at position index." alt="" coords="195,59,277,88"/>
+<area shape="rect" id="node7" href="$group__vector.html#ga951a0ef34f7e54967c45c59f9ded305b" title="Removes element at position index." alt="" coords="188,112,284,141"/>
+</map>
