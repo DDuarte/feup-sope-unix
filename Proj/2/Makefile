@@ -1,4 +1,4 @@
-CC=clang
+CC=gcc
 
 CFLAGS= -std=gnu11 -g -Wall -pedantic -Wformat=2 -Wextra -Wfloat-equal -Wundef -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wstrict-prototypes -Waggregate-return -Wmissing-prototypes -Werror -pedantic-errors
 LDFLAGS= -lrt -lpthread -lm
@@ -24,7 +24,7 @@ dirs:
 	mkdir -p $(BIN_DIR) $(BIN_DIR)/$(TEMP_DIR)
 
 $(EXECUTABLE): $(SRC_OBJ)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(SRC_OBJ) -o $(BIN_DIR)/$(basename $@)
+	$(CC) $(CFLAGS) $(SRC_OBJ) -o $(BIN_DIR)/$(basename $@) $(LDFLAGS)
 
 %.o:
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/$(notdir $(basename $@)).c -o $(BIN_DIR)/$(TEMP_DIR)/$(notdir $(basename $@)).o
